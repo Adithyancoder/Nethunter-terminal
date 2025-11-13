@@ -8,13 +8,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.offsec.nhterm.utils.NLog;
 import com.offsec.nhterm.backend.EmulatorDebug;
 import com.offsec.nhterm.component.config.NeoTermPath;
-import com.offsec.nhterm.utils.NLog;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import android.widget.ProgressBar;
 
 /**
  * @author kiva
@@ -51,7 +51,6 @@ final class SetupThread extends Thread {
       final byte[] buffer = new byte[8096];
       final List<Pair<String, String>> symlinks = new ArrayList<>(50);
 
-
       try (ZipInputStream zipInput = new ZipInputStream(sourceConnection.getInputStream())) {
         ZipEntry zipEntry;
 
@@ -66,7 +65,22 @@ final class SetupThread extends Thread {
           activity.runOnUiThread(() -> {
             try {
               double progressFloat = ((double) totalReadBytesFinal) / ((double) totalBytesFinal) * 100.0;
-              progressDialog.setProgress((int) progressFloat);
+              // Prefer updating the ProgressBar inside the dialog (non-deprecated) when possible
+              try {
+                ProgressBar pb = null;
+                if (progressDialog != null) {
+                  // android.R.id.progress is the conventional id used by ProgressDialog's horizontal style
+                  final Object view = progressDialog.findViewById(android.R.id.progress);
+                  if (view instanceof ProgressBar) {
+                    pb = (ProgressBar) view;
+                  }
+                }
+                if (pb != null) {
+                  pb.setProgress((int) progressFloat);
+                } // else: no progress view available; skip updating to avoid calling deprecated API
+              } catch (RuntimeException ignored) {
+                // ignore UI update failures
+              }
             } catch (RuntimeException ignore) {
               // activity dismissed
             }
