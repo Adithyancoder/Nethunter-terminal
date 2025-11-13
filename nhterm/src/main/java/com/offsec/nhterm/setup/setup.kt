@@ -1,8 +1,12 @@
 package com.offsec.nhterm.setup
 
-import android.app.ProgressDialog
 import android.content.Context
 import android.os.Build
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -10,7 +14,6 @@ import com.offsec.nhterm.App
 import com.offsec.nhterm.R
 import com.offsec.nhterm.component.config.NeoTermPath
 import java.io.File
-import java.util.*
 
 /**
  * @author kiva
@@ -19,9 +22,6 @@ interface ResultListener {
   fun onResult(error: Exception?)
 }
 
-/**
- * @author kiva
- */
 object SetupHelper {
   fun needSetup(): Boolean {
     val PREFIX_FILE = File(NeoTermPath.USR_PATH)
@@ -38,9 +38,8 @@ object SetupHelper {
     }
 
     val prefixFile = File(NeoTermPath.USR_PATH)
-
     val progress = makeProgressDialog(activity)
-    progress.max = 100
+
     progress.show()
 
     SetupThread(
@@ -52,16 +51,42 @@ object SetupHelper {
     ).start()
   }
 
-  private fun makeProgressDialog(context: Context): ProgressDialog {
+  private fun makeProgressDialog(context: Context): AlertDialog {
     return makeProgressDialog(context, context.getString(R.string.installer_message))
   }
 
-  fun makeProgressDialog(context: Context, message: String): ProgressDialog {
-    val dialog = ProgressDialog(context)
-    dialog.setMessage(message)
-    dialog.isIndeterminate = false
-    dialog.setCancelable(false)
-    dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+  fun makeProgressDialog(context: Context, message: String): AlertDialog {
+    // Build a simple vertical layout: message TextView + horizontal ProgressBar
+    val container = LinearLayout(context)
+    container.orientation = LinearLayout.VERTICAL
+    val lp = LinearLayout.LayoutParams(
+      ViewGroup.LayoutParams.MATCH_PARENT,
+      ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+    val msgView = TextView(context)
+    msgView.text = message
+    msgView.setPadding(32, 24, 32, 8)
+    container.addView(msgView, lp)
+
+    val progressBar = ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal)
+    progressBar.isIndeterminate = false
+    progressBar.max = 100
+
+    progressBar.id = android.R.id.progress
+    val barLp = FrameLayout.LayoutParams(
+      ViewGroup.LayoutParams.MATCH_PARENT,
+      ViewGroup.LayoutParams.WRAP_CONTENT
+    )
+    barLp.setMargins(32, 8, 32, 24)
+    val frame = FrameLayout(context)
+    frame.addView(progressBar, barLp)
+    container.addView(frame, lp)
+
+    val dialog = MaterialAlertDialogBuilder(context, R.style.DialogStyle)
+      .setView(container)
+      .setCancelable(false)
+      .create()
+
     return dialog
   }
 
@@ -73,7 +98,7 @@ object SetupHelper {
     return MaterialAlertDialogBuilder(context, R.style.DialogStyle)
       .setTitle(R.string.error)
       .setMessage(message)
-      .setPositiveButton(android.R.string.yes, null)
+      .setPositiveButton(android.R.string.ok, null)
       .setNeutralButton(R.string.show_help) { _, _ -> App.get().openHelpLink() }
       .create()
   }

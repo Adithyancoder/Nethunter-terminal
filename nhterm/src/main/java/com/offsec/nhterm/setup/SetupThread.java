@@ -1,6 +1,6 @@
 package com.offsec.nhterm.setup;
 
-import android.app.ProgressDialog;
+import androidx.appcompat.app.AlertDialog;
 import android.system.Os;
 import android.util.Pair;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,11 +25,11 @@ final class SetupThread extends Thread {
   private final File prefixPath;
   private final AppCompatActivity activity;
   private final ResultListener resultListener;
-  private final ProgressDialog progressDialog;
+  private final AlertDialog progressDialog;
 
   public SetupThread(AppCompatActivity activity, SourceConnection sourceConnection,
                      File prefixPath, ResultListener resultListener,
-                     ProgressDialog progressDialog) {
+                     AlertDialog progressDialog) {
     this.activity = activity;
     this.sourceConnection = sourceConnection;
     this.prefixPath = prefixPath;
