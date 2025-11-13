@@ -36,7 +36,7 @@ class App : Application() {
     MaterialAlertDialogBuilder(context, R.style.DialogStyle)
       .setTitle(R.string.error)
       .setMessage(message)
-      .setNegativeButton(android.R.string.no, null)
+      .setNegativeButton(android.R.string.cancel, null)
       .setPositiveButton(R.string.show_help) { _, _ ->
         openHelpLink()
       }
