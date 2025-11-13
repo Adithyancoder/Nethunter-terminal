@@ -19,7 +19,6 @@ import android.widget.ProgressBar;
 /**
  * @author kiva
  */
-
 final class SetupThread extends Thread {
   private final SourceConnection sourceConnection;
   private final File prefixPath;
