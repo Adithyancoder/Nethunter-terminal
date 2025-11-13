@@ -1,6 +1,7 @@
 /**
  * Copyright (C) 2015 nshmura
  * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (c) 2025 NetHunter, Christian <kimocoder> B.
  * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +32,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.AppCompatTextView;
-import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
@@ -40,11 +40,9 @@ import com.offsec.nhterm.R;
 import java.util.Objects;
 
 public class RecyclerTabLayout extends RecyclerView {
-
   protected static final long DEFAULT_SCROLL_DURATION = 200;
   protected static final float DEFAULT_POSITION_THRESHOLD = 0.6f;
   protected static final float POSITION_THRESHOLD_ALLOWABLE = 0.001f;
-
   protected Paint mIndicatorPaint;
   protected int mTabBackgroundResId;
   protected int mTabOnScreenLimit;
@@ -58,12 +56,10 @@ public class RecyclerTabLayout extends RecyclerView {
   protected int mTabPaddingEnd;
   protected int mTabPaddingBottom;
   protected int mIndicatorHeight;
-
   protected LinearLayoutManager mLinearLayoutManager;
   protected RecyclerOnScrollListener mRecyclerOnScrollListener;
   protected ViewPager mViewPager;
   protected Adapter<?> mAdapter;
-
   protected int mIndicatorPosition;
   protected int mIndicatorGap;
   protected int mIndicatorScroll;
@@ -72,7 +68,7 @@ public class RecyclerTabLayout extends RecyclerView {
   protected float mOldPositionOffset;
   protected float mPositionThreshold;
   protected boolean mRequestScrollToTab;
-  protected boolean mScrollEanbled;
+  protected boolean mScrollEnabled;
 
   public RecyclerTabLayout(Context context) {
     this(context, null);
@@ -90,7 +86,7 @@ public class RecyclerTabLayout extends RecyclerView {
     mLinearLayoutManager = new LinearLayoutManager(getContext()) {
       @Override
       public boolean canScrollHorizontally() {
-        return mScrollEanbled;
+        return mScrollEnabled;
       }
     };
     mLinearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
@@ -138,7 +134,7 @@ public class RecyclerTabLayout extends RecyclerView {
 
     mTabBackgroundResId = a
       .getResourceId(R.styleable.rtl_RecyclerTabLayout_rtl_tabBackground, 0);
-    mScrollEanbled = a.getBoolean(R.styleable.rtl_RecyclerTabLayout_rtl_scrollEnabled, true);
+    mScrollEnabled = a.getBoolean(R.styleable.rtl_RecyclerTabLayout_rtl_scrollEnabled, true);
     a.recycle();
   }
 
@@ -214,7 +210,6 @@ public class RecyclerTabLayout extends RecyclerView {
   }
 
   protected void startAnimation(final int position) {
-
     float distance = 1;
 
     View view = mLinearLayoutManager.findViewByPosition(position);
@@ -231,12 +226,7 @@ public class RecyclerTabLayout extends RecyclerView {
       animator = ValueAnimator.ofFloat(-distance, 0);
     }
     animator.setDuration(DEFAULT_SCROLL_DURATION);
-    animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-      @Override
-      public void onAnimationUpdate(ValueAnimator animation) {
-        scrollToTab(position, (float) animation.getAnimatedValue(), true);
-      }
-    });
+    animator.addUpdateListener(animation -> scrollToTab(position, (float) animation.getAnimatedValue(), true));
     animator.start();
   }
 
@@ -357,11 +347,10 @@ public class RecyclerTabLayout extends RecyclerView {
   }
 
   protected boolean isLayoutRtl() {
-    return ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
+    return getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
   }
 
   protected static class RecyclerOnScrollListener extends OnScrollListener {
-
     protected RecyclerTabLayout mRecyclerTabLayout;
     protected LinearLayoutManager mLinearLayoutManager;
 
@@ -454,22 +443,17 @@ public class RecyclerTabLayout extends RecyclerView {
 
   public static abstract class Adapter<T extends RecyclerView.ViewHolder>
     extends RecyclerView.Adapter<T> {
-
     protected ViewPager mViewPager;
     protected int mIndicatorPosition;
-
     public Adapter(ViewPager viewPager) {
       mViewPager = viewPager;
     }
-
     public ViewPager getViewPager() {
       return mViewPager;
     }
-
     public void setCurrentIndicatorPosition(int indicatorPosition) {
       mIndicatorPosition = indicatorPosition;
     }
-
     public int getCurrentIndicatorPosition() {
       return mIndicatorPosition;
     }
@@ -477,9 +461,7 @@ public class RecyclerTabLayout extends RecyclerView {
 
   public static class DefaultAdapter
     extends RecyclerTabLayout.Adapter<DefaultAdapter.ViewHolder> {
-
     protected static final int MAX_TAB_TEXT_LINES = 2;
-
     protected int mTabPaddingStart;
     protected int mTabPaddingTop;
     protected int mTabPaddingEnd;
@@ -505,7 +487,8 @@ public class RecyclerTabLayout extends RecyclerView {
           tabTextView.getCurrentTextColor(), mTabSelectedTextColor));
       }
 
-      ViewCompat.setPaddingRelative(tabTextView, mTabPaddingStart, mTabPaddingTop,
+      // use the instance API instead of the deprecated ViewCompat helper
+      tabTextView.setPaddingRelative(mTabPaddingStart, mTabPaddingTop,
         mTabPaddingEnd, mTabPaddingBottom);
       tabTextView.setTextAppearance(parent.getContext(), mTabTextAppearance);
       tabTextView.setGravity(Gravity.CENTER);
@@ -570,15 +553,12 @@ public class RecyclerTabLayout extends RecyclerView {
     public void setTabMaxWidth(int tabMaxWidth) {
       mTabMaxWidth = tabMaxWidth;
     }
-
     public void setTabMinWidth(int tabMinWidth) {
       mTabMinWidth = tabMinWidth;
     }
-
     public void setTabBackgroundResId(int tabBackgroundResId) {
       mTabBackgroundResId = tabBackgroundResId;
     }
-
     public void setTabOnScreenLimit(int tabOnScreenLimit) {
       mTabOnScreenLimit = tabOnScreenLimit;
     }
@@ -589,24 +569,22 @@ public class RecyclerTabLayout extends RecyclerView {
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-
       public TextView title;
 
       public ViewHolder(View itemView) {
         super(itemView);
         title = (TextView) itemView;
         itemView.setOnClickListener(v -> {
-          int pos = getAdapterPosition();
-          if (pos != NO_POSITION) {
-            getViewPager().setCurrentItem(pos, true);
-          }
-        });
-      }
-    }
-  }
+          int pos = getBindingAdapterPosition();
+           if (pos != NO_POSITION) {
+             getViewPager().setCurrentItem(pos, true);
+           }
+         });
+       }
+     }
+   }
 
-  public static class TabTextView extends AppCompatTextView {
-
+   public static class TabTextView extends AppCompatTextView {
     public TabTextView(Context context) {
       super(context);
     }
