@@ -10,7 +10,7 @@ import android.view.MenuItem
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.wrdlbrnft.sortedlistadapter.SortedListAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -24,7 +24,6 @@ import com.offsec.nhterm.component.colorscheme.ColorSchemeComponent
 import com.offsec.nhterm.component.colorscheme.NeoColorScheme
 import com.offsec.nhterm.frontend.session.view.TerminalView
 import com.offsec.nhterm.utils.Terminals
-
 
 /**
  * @author kiva
@@ -83,7 +82,7 @@ class ColorSchemeActivity : BaseCustomizeActivity() {
         .setPositiveButton(R.string.save) { _, _ ->
           applyColorScheme(editingColorScheme, true)
         }
-        .setNegativeButton(android.R.string.no, null)
+        .setNegativeButton(android.R.string.cancel, null)
         .setNeutralButton(R.string.exit) { _, _ ->
           finish()
         }
@@ -109,7 +108,7 @@ class ColorSchemeActivity : BaseCustomizeActivity() {
           if (color != 0) {
             edit.setTextColor(color)
           } else {
-            edit.setTextColor(resources.getColor(R.color.textColor))
+            edit.setTextColor(ContextCompat.getColor(this@ColorSchemeActivity, R.color.textColor))
           }
         }
       }
@@ -133,9 +132,9 @@ class ColorSchemeActivity : BaseCustomizeActivity() {
     MaterialAlertDialogBuilder(this, R.style.DialogStyle)
       .setTitle(model.colorName)
       .setView(view)
-      .setNegativeButton(android.R.string.no, null)
-      .setPositiveButton(android.R.string.yes) { _, _ ->
-        applyColor(edit.text.toString());
+      .setNegativeButton(android.R.string.cancel, null)
+      .setPositiveButton(android.R.string.ok) { _, _ ->
+        applyColor(edit.text.toString())
       }
       .setNeutralButton(R.string.select_new_value) { _, _ ->
         ColorOMaticDialog.Builder()
@@ -163,11 +162,11 @@ class ColorSchemeActivity : BaseCustomizeActivity() {
       MaterialAlertDialogBuilder(this, R.style.DialogStyle)
         .setTitle(R.string.save_color)
         .setView(view)
-        .setPositiveButton(android.R.string.yes) { _, _ ->
+        .setPositiveButton(android.R.string.ok) { _, _ ->
           colorScheme.colorName = edit.text.toString()
           applyColorScheme(colorScheme, finishAfter)
         }
-        .setNegativeButton(android.R.string.no, null)
+        .setNegativeButton(android.R.string.cancel, null)
         .show()
     } else {
       try {
