@@ -16,6 +16,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.offsec.nhterm.App
@@ -39,7 +42,6 @@ import de.mrapp.android.tabswitcher.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-
 
 class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreferences.OnSharedPreferenceChangeListener {
   companion object {
@@ -71,10 +73,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     val fullscreen = NeoPreference.isFullScreenEnabled()
     if (fullscreen) {
-      window.setFlags(
-        WindowManager.LayoutParams.FLAG_FULLSCREEN,
-        WindowManager.LayoutParams.FLAG_FULLSCREEN,
-      )
+      WindowCompat.setDecorFitsSystemWindows(window, false)
+      val controller = WindowInsetsControllerCompat(window, window.decorView)
+      controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+      controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
     setContentView(R.layout.ui_main)
@@ -144,19 +146,18 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     TabSwitcher.setupWithMenu(
       tabSwitcher, toolbar.menu,
-      {
-        if (!tabSwitcher.isSwitcherShown) {
-          val imm = this@NeoTermActivity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-          if (imm.isActive && tabSwitcher.selectedTab is TermTab) {
-            val tab = tabSwitcher.selectedTab as TermTab
-            tab.requireHideIme()
-          }
-          toggleSwitcher(showSwitcher = true, easterEgg = true)
-        } else {
-          toggleSwitcher(showSwitcher = false, easterEgg = true)
+    ) {
+      if (!tabSwitcher.isSwitcherShown) {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        if (imm.isActive && tabSwitcher.selectedTab is TermTab) {
+          val tab = tabSwitcher.selectedTab as TermTab
+          tab.requireHideIme()
         }
-      },
-    )
+        toggleSwitcher(showSwitcher = true, easterEgg = true)
+      } else {
+        toggleSwitcher(showSwitcher = false, easterEgg = true)
+      }
+    }
     return true
   }
 
@@ -167,19 +168,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         true
       }
       R.id.menu_item_new_session -> {
-        addNewNetHunterSession("Kali Shell")
+        addNewNetHunterSession()
         true
       }
       R.id.menu_item_new_emergency_session -> {
-        addNewEmergencySession("Emergency Shell")
+        addNewEmergencySession()
         true
       }
       R.id.menu_item_new_bash_session -> {
-        addNewAndroidSession("Android Shell")
+        addNewAndroidSession()
         true
       }
       R.id.menu_item_new_root_session -> {
-        addNewRootSession("Root Shell")
+        addNewRootSession()
         true
       }
       R.id.menu_item_package_settings -> {
@@ -345,10 +346,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   @RequiresApi(Build.VERSION_CODES.P)
   override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
     termService = (service as NeoTermService.NeoTermBinder).service
-    if (termService == null) {
-      finish()
-      return
-    }
 
     if (!isRecreating()) {
       enterMain()
@@ -389,7 +386,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
 
     // Fore system shell mode to be enabled.
-    addNewSession(null, true, createRevealAnimation())
+    addNewSession()
   }
 
   private fun enterMain() {
@@ -408,10 +405,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
       if (intent?.action == Intent.ACTION_RUN) {
         // app shortcuts
-        addNewSession(
-          null,
-          false, createRevealAnimation(),
-        )
+        addNewSession()
       } else {
         switchToSession(lastSession)
       }
@@ -419,7 +413,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     } else {
       toggleSwitcher(showSwitcher = true, easterEgg = false)
       // Fore system shell mode to be disabled.
-      addNewSession(null, false, createRevealAnimation())
+      addNewSession()
     }
   }
 
@@ -432,7 +426,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   private fun isRecreating(): Boolean {
     val result = peekRecreating()
     if (result) {
-      NeoPreference.store(KEY_NO_RESTORE, !result)
+      NeoPreference.store(KEY_NO_RESTORE, false)
     }
     return result
   }
@@ -456,6 +450,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     this@NeoTermActivity.recreate()
   }
 
+  @Suppress("unused")
   private fun showProfileDialog() {
     val profileComponent = ComponentManager.getComponent<ProfileComponent>()
     val profiles = profileComponent.getProfiles(ShellProfile.PROFILE_META_NAME)
@@ -465,7 +460,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
       MaterialAlertDialogBuilder(this, R.style.DialogStyle)
         .setTitle(R.string.error)
         .setMessage(R.string.no_profile_available)
-        .setPositiveButton(android.R.string.yes, null)
+        .setPositiveButton(android.R.string.ok, null)
         .show()
       return
     }
@@ -478,30 +473,24 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         val selectedProfile = profilesShell[which]
         addNewSessionWithProfile(selectedProfile)
       }
-      .setPositiveButton(android.R.string.no, null)
+      .setPositiveButton(android.R.string.cancel, null)
       .show()
   }
 
   private fun addNewSession() {
-    addNewNetHunterSession("Kali Shell")
-  }
-
-  private fun addNewSession(sessionName: String?, systemShell: Boolean, animation: Animation) {
-    addNewNetHunterSession("Kali Shell")
+    addNewNetHunterSession()
   }
 
   private fun addNewSessionWithProfile(profile: ShellProfile) {
     if (!tabSwitcher.isSwitcherShown) {
       toggleSwitcher(showSwitcher = true, easterEgg = false)
     }
-    addNewSessionWithProfile(
-      null, getSystemShellMode(),
-      createRevealAnimation(), profile,
-    )
+    addNewSessionWithProfile(getSystemShellMode(), createRevealAnimation(), profile)
   }
 
+  @Suppress("UNUSED_PARAMETER")
   private fun addNewSessionWithProfile(
-    sessionName: String?, systemShell: Boolean,
+    systemShell: Boolean,
     animation: Animation, profile: ShellProfile,
   ) {
     val sessionCallback = TermSessionCallback()
@@ -513,7 +502,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
       .profile(profile)
     val session = termService!!.createTermSession(parameter)
 
-    session.mSessionName = sessionName ?: generateSessionName("Kali Shell")
+    // Callers never provide a custom name, so generate a default one here.
+    session.mSessionName = generateSessionName("Kali Shell")
 
     val tab = createTab(session.mSessionName) as TermTab
     tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
@@ -523,7 +513,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   }
 
   @SuppressLint("SdCardPath")
-  private fun addNewEmergencySession(sessionName: String?) {
+  private fun addNewEmergencySession() {
     val sessionCallback = TermSessionCallback()
     val viewClient = TermViewClient(this)
 
@@ -534,7 +524,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     val session = termService!!.createTermSession(parameter)
 
-    session.mSessionName = sessionName ?: generateSessionName("Emergency Shell")
+    session.mSessionName = generateSessionName("Emergency Shell")
 
     val tab = createTab(session.mSessionName) as TermTab
     tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
@@ -544,19 +534,19 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   }
   
   @SuppressLint("SdCardPath")
-  private fun addNewAndroidSession(sessionName: String?) {
+  private fun addNewAndroidSession() {
     val sysarch = System.getProperty("os.arch")
     val sessionCallback = TermSessionCallback()
     val viewClient = TermViewClient(this)
 
     val parameter = ShellParameter()
       .callback(sessionCallback)
-      .executablePath("/data/data/com.offsec.nhterm/files/usr/bin_$sysarch/bash")
+      .executablePath(filesDir.path + "/usr/bin_$sysarch/bash")
       .systemShell(true)
 
     val session = termService!!.createTermSession(parameter)
 
-    session.mSessionName = sessionName ?: generateSessionName("Android Shell")
+    session.mSessionName = generateSessionName("Android Shell")
 
     val tab = createTab(session.mSessionName) as TermTab
     tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
@@ -565,17 +555,18 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     switchToSession(tab)
   }
 
-  private fun addNewNetHunterSession(sessionName: String?) {
+  @Suppress("UNUSED_PARAMETER")
+  private fun addNewNetHunterSession() {
     val sysarch = System.getProperty("os.arch")
     val sessionCallback = TermSessionCallback()
     val viewClient = TermViewClient(this)
 
     val parameter = ShellParameter()
       .callback(sessionCallback)
-      .executablePath("/data/data/com.offsec.nhterm/files/usr/bin_$sysarch/kali")
+      .executablePath(filesDir.path + "/usr/bin_$sysarch/kali")
     val session = termService!!.createTermSession(parameter)
 
-    session.mSessionName = sessionName ?: generateSessionName("Kali Shell")
+    session.mSessionName = generateSessionName("Kali Shell")
 
     val tab = createTab(session.mSessionName) as TermTab
     tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
@@ -585,20 +576,20 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   }
 
   @SuppressLint("SdCardPath")
-  private fun addNewRootSession(sessionName: String?) {
+  private fun addNewRootSession() {
     val sysarch = System.getProperty("os.arch")
     val sessionCallback = TermSessionCallback()
     val viewClient = TermViewClient(this)
 
     val parameter = ShellParameter()
       .callback(sessionCallback)
-      .executablePath("/data/data/com.offsec.nhterm/files/usr/bin_$sysarch/android-su")
+      .executablePath(filesDir.path + "/usr/bin_$sysarch/android-su")
       .systemShell(true)
 
     val session = termService!!.createTermSession(parameter)
     generateSessionName("Android")
 
-    session.mSessionName = sessionName ?: generateSessionName("Root Shell")
+    session.mSessionName = generateSessionName("Root Shell")
 
     val tab = createTab(session.mSessionName) as TermTab
     tab.termData.initializeSessionWith(session, sessionCallback, viewClient)
@@ -630,6 +621,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     switchToSession(tab)
   }
 
+  @Suppress("unused")
   private fun addXSession() {
     if (!tabSwitcher.isSwitcherShown) {
       toggleSwitcher(showSwitcher = true, easterEgg = false)
@@ -638,7 +630,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     val parameter = XParameter()
     val session = termService!!.createXSession(this, parameter)
 
-    session.mSessionName = generateXSessionName("X")
+    session.mSessionName = generateXSessionName()
     val tab = createXTab(session.mSessionName) as XSessionTab
     tab.session = session
 
@@ -669,7 +661,9 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     return "$prefix #${termService!!.sessions.size}"
   }
 
-  private fun generateXSessionName(prefix: String): String {
+  @Suppress("UNUSED_PARAMETER")
+  private fun generateXSessionName(): String {
+    val prefix = "X"
     return "$prefix #${termService!!.xSessions.size}"
   }
 
@@ -763,11 +757,14 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
   private fun createWindowInsetsListener(): OnApplyWindowInsetsListener {
     return OnApplyWindowInsetsListener { _, insets ->
-      tabSwitcher.setPadding(
-        insets.systemWindowInsetLeft,
-        insets.systemWindowInsetTop, insets.systemWindowInsetRight,
-        insets.systemWindowInsetBottom,
-      )
+      // WindowInsetsCompat works across API levels and provides getInsets(Type.systemBars())
+      val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+      val left = systemBars.left
+      val top = systemBars.top
+      val right = systemBars.right
+      val bottom = systemBars.bottom
+
+      tabSwitcher.setPadding(left, top, right, bottom)
       insets
     }
   }
@@ -810,10 +807,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     if (tabSwitcher.count > 1) {
       var index = tabSwitcher.indexOf(tab)
       if (NeoPreference.isNextTabEnabled()) {
-        // 关闭当前窗口后，向下一个窗口切换
         if (--index < 0) index = tabSwitcher.count - 1
       } else {
-        // 关闭当前窗口后，向上一个窗口切换
         if (++index >= tabSwitcher.count) index = 0
       }
       switchToSession(tabSwitcher.getTab(index))
@@ -831,13 +826,23 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   @Subscribe(threadMode = ThreadMode.MAIN)
   fun onToggleImeEvent(toggleImeEvent: ToggleImeEvent) {
     if (!tabSwitcher.isSwitcherShown) {
-      val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-      imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+      val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+      // Use the current focused view if available, otherwise fall back to the window's decorView
+      val viewForToken: View = currentFocus ?: window.decorView
+
+      // Toggle using the recommended show/hide methods
+      if (imm.isActive) {
+        imm.hideSoftInputFromWindow(viewForToken.windowToken, 0)
+      } else {
+        // Ensure the view has focus before requesting the keyboard
+        viewForToken.requestFocus()
+        imm.showSoftInput(viewForToken, InputMethodManager.SHOW_IMPLICIT)
+      }
     }
   }
 
-  @Subscribe(threadMode = ThreadMode.MAIN)
-  fun onTitleChangedEvent(titleChangedEvent: TitleChangedEvent) {
+  @Suppress("unused")
+  private fun onTitleChangedEvent(titleChangedEvent: TitleChangedEvent) {
     if (!tabSwitcher.isSwitcherShown) {
       toolbar.title = titleChangedEvent.title
     }
