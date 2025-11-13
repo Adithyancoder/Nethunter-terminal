@@ -16,8 +16,7 @@ package de.mrapp.android.tabswitcher;
 import android.view.animation.Interpolator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import static de.mrapp.android.util.Condition.ensureAtLeast;
+import de.mrapp.android.util.Condition;
 
 /**
  * An animation, which can be used to add or remove tabs to/from a {@link TabSwitcher}.
@@ -86,7 +85,7 @@ public abstract class Animation {
      */
     @NonNull
     public final BuilderType setDuration(final long duration) {
-      ensureAtLeast(duration, -1, "The duration must be at least -1");
+      Condition.ensureAtLeast(duration, -1, "The duration must be at least -1");
       this.duration = duration;
       return self();
     }
@@ -97,15 +96,10 @@ public abstract class Animation {
      *
      * @param interpolator The interpolator, which should be set, as an instance of the type {@link
      *                     Interpolator} or null, if the default interpolator should be used
-     * @return The builder, this method has be called upon, as an instance of the generic type
-     * BuilderType. The builder may not be null
      */
-    @NonNull
-    public final BuilderType setInterpolator(@Nullable final Interpolator interpolator) {
+    public final void setInterpolator(@Nullable final Interpolator interpolator) {
       this.interpolator = interpolator;
-      return self();
     }
-
   }
 
   /**
@@ -127,7 +121,7 @@ public abstract class Animation {
    *                     {@link Interpolator} or null, if the default interpolator should be used
    */
   protected Animation(final long duration, @Nullable final Interpolator interpolator) {
-    ensureAtLeast(duration, -1, "The duration must be at least -1");
+    Condition.ensureAtLeast(duration, -1, "The duration must be at least -1");
     this.duration = duration;
     this.interpolator = interpolator;
   }
@@ -152,5 +146,4 @@ public abstract class Animation {
   public final Interpolator getInterpolator() {
     return interpolator;
   }
-
 }
