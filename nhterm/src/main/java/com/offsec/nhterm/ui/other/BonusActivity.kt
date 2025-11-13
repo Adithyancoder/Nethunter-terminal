@@ -17,6 +17,9 @@ import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.offsec.nhterm.R
 
 /**
@@ -42,11 +45,15 @@ class BonusActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     mLayout = FrameLayout(this)
-    window.setFlags(
-      WindowManager.LayoutParams.FLAG_FULLSCREEN,
-      WindowManager.LayoutParams.FLAG_FULLSCREEN
-    )
     setContentView(mLayout)
+
+    // Make activity fullscreen (hide status and navigation bars) using WindowInsets API
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    val controller = WindowInsetsControllerCompat(window, mLayout)
+    controller.hide(
+      WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars()
+    )
+    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
   }
 
   override fun onAttachedToWindow() {
