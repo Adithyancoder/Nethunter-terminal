@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 - 2017 Michael Rapp
+ * Copyright 2025 - Christian <kimocoder> B.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -60,7 +61,7 @@ public class PreviewDataBinder extends AbstractDataBinder<Bitmap, Tab, ImageView
    */
   public PreviewDataBinder(@NonNull final ViewGroup parent,
                            @NonNull final ViewRecycler<Tab, Void> childViewRecycler) {
-    super(parent.getContext(), new LruCache<Tab, Bitmap>(7));
+    super(parent.getContext(), new LruCache<>(7));
     ensureNotNull(parent, "The parent may not be null");
     ensureNotNull(childViewRecycler, "The child view recycler may not be null");
     this.parent = parent;
@@ -85,8 +86,7 @@ public class PreviewDataBinder extends AbstractDataBinder<Bitmap, Tab, ImageView
     viewHolder.child = child;
   }
 
-  @Nullable
-  @Override
+  @NonNull @Override
   protected final Bitmap doInBackground(@NonNull final Tab key,
                                         @NonNull final TabItem... params) {
     TabItem tabItem = params[0];
@@ -105,6 +105,10 @@ public class PreviewDataBinder extends AbstractDataBinder<Bitmap, Tab, ImageView
   }
 
   @Override
+  protected void onPostExecute(@NonNull ImageView view, @Nullable Bitmap data, long duration, @NonNull TabItem... params) {
+    onPostExecute(view, data, params);
+  }
+
   protected final void onPostExecute(@NonNull final ImageView view, @Nullable final Bitmap data,
                                      @NonNull final TabItem... params) {
     view.setImageBitmap(data);
@@ -112,5 +116,4 @@ public class PreviewDataBinder extends AbstractDataBinder<Bitmap, Tab, ImageView
     TabItem tabItem = params[0];
     childViewRecycler.remove(tabItem.getTab());
   }
-
 }
