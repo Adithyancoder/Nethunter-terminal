@@ -61,8 +61,13 @@ class BonusActivity : AppCompatActivity() {
     val dp = dm.density
     val size = (dm.widthPixels.coerceAtMost(dm.heightPixels).toFloat().coerceAtMost(600 * dp) - 100 * dp).toInt()
     val stick = object : View(this) {
-      internal var mPaint = Paint()
-      internal var mShadow = Path()
+      var mPaint = Paint()
+      var mShadow = Path()
+      // Preallocate gradient drawable and colors to avoid allocations in onDraw
+      private val gradient = GradientDrawable().apply {
+        orientation = GradientDrawable.Orientation.LEFT_RIGHT
+        colors = intArrayOf(0xFFFFFFFF.toInt(), 0xFFAAAAAA.toInt())
+      }
 
       public override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -78,12 +83,10 @@ class BonusActivity : AppCompatActivity() {
         val w = width
         val h = height / 2
         c.translate(0f, h.toFloat())
-        val g = GradientDrawable()
-        g.orientation = GradientDrawable.Orientation.LEFT_RIGHT
-        g.setGradientCenter(w * 0.75f, 0f)
-        g.colors = intArrayOf(0xFFFFFFFF.toInt(), 0xFFAAAAAA.toInt())
-        g.setBounds(0, 0, w, h)
-        g.draw(c)
+        // Update pre-allocated gradient for current size/center and draw
+        gradient.setGradientCenter(w * 0.75f, 0f)
+        gradient.setBounds(0, 0, w, h)
+        gradient.draw(c)
         mPaint.color = 0xFFAAAAAA.toInt()
         mShadow.reset()
         mShadow.moveTo(0f, 0f)
@@ -106,8 +109,8 @@ class BonusActivity : AppCompatActivity() {
     im.translationZ = 20f
     im.scaleX = 0f
     im.scaleY = 0f
-    val platlogo = getDrawable(R.drawable.ic_kali_logo)
-    platlogo!!.alpha = 0
+    val platlogo = androidx.appcompat.content.res.AppCompatResources.getDrawable(this, R.drawable.ic_kali_logo)
+    platlogo?.alpha = 0
     im.setImageDrawable(platlogo)
     im.background = makeRipple()
     im.isClickable = true
@@ -129,10 +132,12 @@ class BonusActivity : AppCompatActivity() {
           .setStartDelay(500)
           .start()
 
-        val a = ObjectAnimator.ofInt(platlogo, "alpha", 0, 255)
-        a.interpolator = mInterpolator
-        a.startDelay = 1000
-        a.start()
+        platlogo?.let { d ->
+          val a = ObjectAnimator.ofInt(d, "alpha", 0, 255)
+          a.interpolator = mInterpolator
+          a.startDelay = 1000
+          a.start()
+        }
 
         stick.animate()
           .translationZ(20f)
@@ -150,7 +155,7 @@ class BonusActivity : AppCompatActivity() {
     // Enable hardware keyboard input for TV compatibility.
     im.isFocusable = true
     im.requestFocus()
-    im.setOnKeyListener { v, keyCode, event ->
+    im.setOnKeyListener { _, keyCode, event ->
       if (keyCode != KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
         ++mKeyCount
         if (mKeyCount > 2) {
