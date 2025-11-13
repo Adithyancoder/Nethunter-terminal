@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-  compileSdk rootProject.ext.android.COMPILE_SDK_VERSION
+  compileSdkVersion rootProject.ext.android.COMPILE_SDK_VERSION
 
   defaultConfig {
     applicationId "com.offsec.nhterm"
@@ -65,10 +65,10 @@ android {
 
 dependencies {
   implementation fileTree(include: ['*.jar'], dir: 'libs')
-  testImplementation rootProject.ext.deps["junit"]
+  testImplementation "junit:junit:${rootProject.ext.android.JUNIT_VERSION}"
   androidTestImplementation project(path: ':NeoLang')
 
-  implementation rootProject.ext.deps["kotlin-stdlib"]
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.android.KOTLIN_VERSION}"
 
   implementation 'org.greenrobot:eventbus:3.3.1'
   implementation 'com.github.wrdlbrnft:modular-adapter:0.3.0.22'
@@ -78,14 +78,14 @@ dependencies {
   implementation 'com.github.GrenderG:Color-O-Matic:1.1.5'
   implementation 'com.github.topjohnwu.libsu:core:6.0.0'
 
-  implementation 'androidx.annotation:annotation:1.5.0'
-  implementation 'androidx.core:core-ktx:1.9.0'
+  implementation 'androidx.annotation:annotation:1.9.1'
+  implementation 'androidx.core:core-ktx:1.17.0'
   implementation 'androidx.cardview:cardview:1.0.0'
-  implementation 'androidx.appcompat:appcompat:1.6.1'
-  implementation 'androidx.appcompat:appcompat-resources:1.6.1'
-  implementation 'com.google.android.material:material:1.6.1'
+  implementation 'androidx.appcompat:appcompat:1.7.1'
+  implementation 'androidx.appcompat:appcompat-resources:1.7.1'
+  implementation 'com.google.android.material:material:1.13.0'
   implementation 'androidx.preference:preference-ktx:1.2.1'
-  implementation 'androidx.compose.material:material:1.3.1'
+  implementation 'androidx.compose.material:material:1.9.4'
 
   // Backports for lower api levels
   implementation 'com.llamalab.safs:safs-core:0.2.0'
