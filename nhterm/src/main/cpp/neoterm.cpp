@@ -1,16 +1,16 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <jni.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
-#include <string.h>
-
-#define __nhterm_no_return __attribute__((__noreturn__))
+#include <cstring>
+#include <cerrno>
+#include <climits>
 
 #define TERMUX_UNUSED(x) x __attribute__((__unused__))
 #ifdef __APPLE__
@@ -41,7 +41,7 @@ static int create_subprocess(JNIEnv *env,
 #endif
     if (grantpt(ptm) || unlockpt(ptm) ||
         #ifdef LACKS_PTSNAME_R
-        (devname = ptsname(ptm)) == NULL
+        (devname = ptsname(ptm)) == nullptr
         #else
         ptsname_r(ptm, devname, sizeof(devname))
 #endif
@@ -50,7 +50,7 @@ static int create_subprocess(JNIEnv *env,
     }
 
     // Enable UTF-8 mode and disable flow control to prevent Ctrl+S from locking up the display.
-    struct termios tios;
+    struct termios tios = {};
     tcgetattr(ptm, &tios);
     tios.c_iflag |= IUTF8;
     tios.c_iflag &= ~(IXON | IXOFF);
@@ -70,7 +70,7 @@ static int create_subprocess(JNIEnv *env,
         // Clear signals which the Android java process may have blocked:
         sigset_t signals_to_unblock;
         sigfillset(&signals_to_unblock);
-        sigprocmask(SIG_UNBLOCK, &signals_to_unblock, 0);
+        sigprocmask(SIG_UNBLOCK, &signals_to_unblock, nullptr);
 
         close(ptm);
         setsid();
@@ -83,12 +83,31 @@ static int create_subprocess(JNIEnv *env,
         dup2(pts, 2);
 
         DIR *self_dir = opendir("/proc/self/fd");
-        if (self_dir != NULL) {
+        if (self_dir != nullptr) {
             int self_dir_fd = dirfd(self_dir);
             struct dirent *entry;
-            while ((entry = readdir(self_dir)) != NULL) {
-                int fd = atoi(entry->d_name);
-                if (fd > 2 && fd != self_dir_fd) close(fd);
+            while ((entry = readdir(self_dir)) != nullptr) {
+                /*
+                 * Use strtol instead of atoi to detect conversion errors and range
+                 * issues. Skip directory entries that are not purely numeric
+                 * (e.g. "." and ".."). Also protect against values outside the
+                 * range of int and negative values.
+                 */
+                errno = 0;
+                char *endptr = nullptr;
+                long fd_long = strtol(entry->d_name, &endptr, 10);
+
+                /* Not a number or contains non-digit suffix */
+                if (endptr == entry->d_name || *endptr != '\0') continue;
+
+                /* Conversion overflow/underflow */
+                if (errno == ERANGE) continue;
+
+                /* Out-of-range for int, negative, or standard fds we must keep */
+                if (fd_long <= 2 || fd_long == self_dir_fd || fd_long > INT_MAX) continue;
+
+                int fd = static_cast<int>(fd_long);
+                close(fd);
             }
             closedir(self_dir);
         }
@@ -108,57 +127,59 @@ static int create_subprocess(JNIEnv *env,
         // Show terminal output about failing exec() call:
         char *error_message;
         if (asprintf(&error_message, "exec(\"%s\")", cmd) == -1)
-            error_message = const_cast<char *>("exec()");;
+            error_message = const_cast<char *>("exec()");
         perror(error_message);
-        _exit(1);
+         _exit(1);
     }
 }
 
 extern "C" JNIEXPORT jint JNICALL Java_com_offsec_nhterm_backend_JNI_createSubprocess(
-        JNIEnv *env,
-        jclass TERMUX_UNUSED(clazz),
-        jstring cmd,
-        jstring cwd,
-        jobjectArray args,
-        jobjectArray envVars,
-        jintArray processIdArray,
-        jint rows,
-        jint columns) {
+         JNIEnv *env,
+         jclass TERMUX_UNUSED(clazz),
+         jstring cmd,
+         jstring cwd,
+         jobjectArray args,
+         jobjectArray envVars,
+         jintArray processIdArray,
+         jint rows,
+         jint columns) {
     jsize size = args ? env->GetArrayLength(args) : 0;
-    char **argv = NULL;
+    char **argv = nullptr;
     if (size > 0) {
         argv = (char **) malloc((size + 1) * sizeof(char *));
         if (!argv) return throw_runtime_exception(env, "Couldn't allocate argv array");
         for (int i = 0; i < size; ++i) {
-            jstring arg_java_string = (jstring) env->GetObjectArrayElement(args, i);
-            char const *arg_utf8 = env->GetStringUTFChars(arg_java_string, NULL);
+            jobject arg_obj = env->GetObjectArrayElement(args, i);
+            auto arg_java_string = reinterpret_cast<jstring>(arg_obj);
+            char const *arg_utf8 = env->GetStringUTFChars(arg_java_string, nullptr);
             if (!arg_utf8)
                 return throw_runtime_exception(env, "GetStringUTFChars() failed for argv");
             argv[i] = strdup(arg_utf8);
             env->ReleaseStringUTFChars(arg_java_string, arg_utf8);
         }
-        argv[size] = NULL;
+        argv[size] = nullptr;
     }
 
     size = envVars ? env->GetArrayLength(envVars) : 0;
-    char **envp = NULL;
+    char **envp = nullptr;
     if (size > 0) {
         envp = (char **) malloc((size + 1) * sizeof(char *));
         if (!envp) return throw_runtime_exception(env, "malloc() for envp array failed");
         for (int i = 0; i < size; ++i) {
-            jstring env_java_string = (jstring) env->GetObjectArrayElement(envVars, i);
-            char const *env_utf8 = env->GetStringUTFChars(env_java_string, 0);
+            jobject env_obj = env->GetObjectArrayElement(envVars, i);
+            auto env_java_string = reinterpret_cast<jstring>(env_obj);
+            char const *env_utf8 = env->GetStringUTFChars(env_java_string, nullptr);
             if (!env_utf8)
                 return throw_runtime_exception(env, "GetStringUTFChars() failed for env");
             envp[i] = strdup(env_utf8);
             env->ReleaseStringUTFChars(env_java_string, env_utf8);
         }
-        envp[size] = NULL;
+        envp[size] = nullptr;
     }
 
     int procId = 0;
-    char const *cmd_cwd = env->GetStringUTFChars(cwd, NULL);
-    char const *cmd_utf8 = env->GetStringUTFChars(cmd, NULL);
+    char const *cmd_cwd = env->GetStringUTFChars(cwd, nullptr);
+    char const *cmd_utf8 = env->GetStringUTFChars(cmd, nullptr);
     int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns);
     env->ReleaseStringUTFChars(cmd, cmd_utf8);
     env->ReleaseStringUTFChars(cmd, cmd_cwd);
@@ -172,7 +193,7 @@ extern "C" JNIEXPORT jint JNICALL Java_com_offsec_nhterm_backend_JNI_createSubpr
         free(envp);
     }
 
-    int *pProcId = (int *) env->GetPrimitiveArrayCritical(processIdArray, NULL);
+    int *pProcId = static_cast<int *>(env->GetPrimitiveArrayCritical(processIdArray, nullptr));
     if (!pProcId)
         return throw_runtime_exception(env,
                                        "JNI call GetPrimitiveArrayCritical(processIdArray, &isCopy) failed");
@@ -185,41 +206,41 @@ extern "C" JNIEXPORT jint JNICALL Java_com_offsec_nhterm_backend_JNI_createSubpr
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_offsec_nhterm_backend_JNI_setPtyWindowSize(JNIEnv *TERMUX_UNUSED(env),
-                                              jclass TERMUX_UNUSED(clazz),
-                                              jint fd, jint rows,
-                                              jint cols) {
-    struct winsize sz = {.ws_row = static_cast<unsigned short>(rows), .ws_col = static_cast<unsigned short>(cols)};
-    ioctl(fd, TIOCSWINSZ, &sz);
-}
+                                               jclass TERMUX_UNUSED(clazz),
+                                               jint fd, jint rows,
+                                               jint cols) {
+     struct winsize sz = {.ws_row = static_cast<unsigned short>(rows), .ws_col = static_cast<unsigned short>(cols)};
+     ioctl(fd, TIOCSWINSZ, &sz);
+ }
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_offsec_nhterm_backend_JNI_setPtyUTF8Mode(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
-                                            jint fd) {
-    struct termios tios;
+ extern "C" JNIEXPORT void JNICALL __attribute__((used))
+ Java_com_offsec_nhterm_backend_JNI_setPtyUTF8Mode(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
+                                             jint fd) {
+    struct termios tios = {};
     tcgetattr(fd, &tios);
     if ((tios.c_iflag & IUTF8) == 0) {
         tios.c_iflag |= IUTF8;
         tcsetattr(fd, TCSANOW, &tios);
     }
-}
+ }
 
-extern "C" JNIEXPORT int JNICALL
-Java_com_offsec_nhterm_backend_JNI_waitFor(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
-                                     jint pid) {
-    int status;
-    waitpid(pid, &status, 0);
-    if (WIFEXITED(status)) {
-        return WEXITSTATUS(status);
-    } else if (WIFSIGNALED(status)) {
-        return -WTERMSIG(status);
-    } else {
-        // Should never happen - waitpid(2) says "One of the first three macros will evaluate to a non-zero (true) value".
-        return 0;
-    }
-}
+ extern "C" JNIEXPORT int JNICALL
+ Java_com_offsec_nhterm_backend_JNI_waitFor(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
+                                      jint pid) {
+     int status;
+     waitpid(pid, &status, 0);
+     if (WIFEXITED(status)) {
+         return WEXITSTATUS(status);
+     } else if (WIFSIGNALED(status)) {
+         return -WTERMSIG(status);
+     } else {
+         // Should never happen - waitpid(2) says "One of the first three macros will evaluate to a non-zero (true) value".
+         return 0;
+     }
+ }
 
-extern "C" JNIEXPORT void JNICALL
-Java_com_offsec_nhterm_backend_JNI_close(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
-                                   jint fileDescriptor) {
-    close(fileDescriptor);
-}
+ extern "C" JNIEXPORT void JNICALL
+ Java_com_offsec_nhterm_backend_JNI_close(JNIEnv *TERMUX_UNUSED(env), jclass TERMUX_UNUSED(clazz),
+                                    jint fileDescriptor) {
+     close(fileDescriptor);
+ }
