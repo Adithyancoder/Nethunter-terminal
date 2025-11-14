@@ -2,7 +2,6 @@ package com.offsec.nhterm.component.codegen
 
 import com.offsec.nhterm.component.NeoComponent
 
-
 class CodeGenComponent : NeoComponent {
   override fun onServiceInit() {
   }

@@ -12,25 +12,20 @@ class TermSessionData {
   private var sessionCallback: TermSessionCallback? = null
   var viewClient: TermViewClient? = null
   var onAutoCompleteListener: OnAutoCompleteListener? = null
-
   var termUI: TermUiPresenter? = null
   var termView: TerminalView? = null
   var extraKeysView: ExtraKeysView? = null
-
   var profile: ShellProfile? = null
 
   fun cleanup() {
     onAutoCompleteListener?.onCleanUp()
     onAutoCompleteListener = null
-
     sessionCallback?.termSessionData = null
     viewClient?.termSessionData = null
-
     termUI = null
     termView = null
     extraKeysView = null
     termSession = null
-
     profile = null
   }
 
