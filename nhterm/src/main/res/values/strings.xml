@@ -63,9 +63,7 @@
   <string name="source_changed">APT source changed, you may get it updated by executing: apt update</string>
   <string name="done">Done</string>
   <string name="install">Install</string>
-  <string name="package_details">Package: %s\n\nVersion: %s\n\nDepends: %s\n\nInstalled Size: %s\n\nDescription: %s\n\nHome
-    Page: %s
-  </string>
+  <string name="package_details">Package: %1$s\n\nVersion: %2$s\n\nDepends: %3$s\n\nInstalled Size: %4$s\n\nDescription: %5$s\n\nHome Page: %6$s</string>
   <string name="package_list_empty">Package list is empty, please check your source.</string>
   <string name="menu_refresh_list">Refresh</string>
   <string name="menu_update">Update and Refresh</string>
