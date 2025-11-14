@@ -8,26 +8,18 @@ import android.view.ScaleGestureDetector
 
 /** A combination of [GestureDetector] and [ScaleGestureDetector].  */
 internal class GestureAndScaleRecognizer(context: Context, val mListener: Listener) {
-
   interface Listener {
     fun onSingleTapUp(e: MotionEvent): Boolean
-
     fun onDoubleTap(e: MotionEvent): Boolean
 
     // For treating double tap as MOUSE_LEFT_BUTTON_MOVED event
     // e.g in vim, we can change window size with fingers moving.
     fun onDoubleTapEvent(e: MotionEvent): Boolean
-
     fun onScroll(e2: MotionEvent, dx: Float, dy: Float): Boolean
-
     fun onFling(e: MotionEvent, velocityX: Float, velocityY: Float): Boolean
-
     fun onScale(focusX: Float, focusY: Float, scale: Float): Boolean
-
     fun onDown(x: Float, y: Float): Boolean
-
     fun onUp(e: MotionEvent): Boolean
-
     fun onLongPress(e: MotionEvent)
   }
 
@@ -36,7 +28,6 @@ internal class GestureAndScaleRecognizer(context: Context, val mListener: Listen
   var isAfterLongPress: Boolean = false
 
   init {
-
     mGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
       override fun onScroll(e1: MotionEvent?, e2: MotionEvent, dx: Float, dy: Float): Boolean {
         return mListener.onScroll(e2, dx, dy)
