@@ -33,12 +33,10 @@ import java.util.*;
  * @version 1.4
  */
 public class NeoTermDatabase {
-
   /**
    * 缓存创建的数据库,以便防止数据库冲突.
    */
   private static final Map<String, NeoTermDatabase> DAO_MAP = new HashMap<>();
-
   /**
    * 数据库配置
    */
@@ -54,7 +52,6 @@ public class NeoTermDatabase {
    * @param config
    */
   private NeoTermDatabase(NeoTermSQLiteConfig config) {
-
     this.neoTermSQLiteConfig = config;
     String saveDir = config.getSaveDir();
     if (saveDir != null
@@ -67,7 +64,6 @@ public class NeoTermDatabase {
         .getApplicationContext(), config)
         .getWritableDatabase();
     }
-
   }
 
   /**
@@ -185,7 +181,6 @@ public class NeoTermDatabase {
     }
   }
 
-
   /**
    * 在SD卡的指定目录上创建数据库文件
    *
@@ -249,7 +244,7 @@ public class NeoTermDatabase {
     String sql = "SELECT COUNT(*) AS c FROM sqlite_master WHERE type ='table' AND name ='"
       + table.tableName + "' ";
     try (Cursor cursor = db.rawQuery(sql, null)) {
-      if (cursor != null && cursor.moveToNext()) {
+      if (cursor.moveToNext()) {
         int count = cursor.getInt(0);
         if (count > 0) {
           return true;
@@ -268,14 +263,12 @@ public class NeoTermDatabase {
   public void dropAllTable() {
     try (Cursor cursor = db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type ='table'", null)) {
-      if (cursor != null) {
-        cursor.moveToFirst();
-        while (cursor.moveToNext()) {
-          try {
-            dropTable(cursor.getString(0));
-          } catch (SQLException ignore) {
-            ignore.printStackTrace();
-          }
+      cursor.moveToFirst();
+      while (cursor.moveToNext()) {
+        try {
+          dropTable(cursor.getString(0));
+        } catch (SQLException ignore) {
+          ignore.printStackTrace();
         }
       }
     }
@@ -289,7 +282,7 @@ public class NeoTermDatabase {
   public int tableCount() {
     try (Cursor cursor = db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type ='table'", null)) {
-      return cursor == null ? 0 : cursor.getCount();
+      return cursor.getCount();
     }
   }
 
@@ -302,11 +295,9 @@ public class NeoTermDatabase {
     try (Cursor cursor = db.rawQuery(
       "SELECT name FROM sqlite_master WHERE type ='table'", null)) {
       List<String> tableList = new ArrayList<>();
-      if (cursor != null) {
-        cursor.moveToFirst();
-        while (cursor.moveToNext()) {
-          tableList.add(cursor.getString(0));
-        }
+      cursor.moveToFirst();
+      while (cursor.moveToNext()) {
+        tableList.add(cursor.getString(0));
       }
       return tableList;
     }
@@ -401,11 +392,6 @@ public class NeoTermDatabase {
     }
     List<T> list = new ArrayList<T>();
     try (Cursor cursor = db.rawQuery(statement, null)) {
-      if (cursor == null) {
-        // DO NOT RETURN NULL
-        // null checks are ugly!
-        return Collections.emptyList();
-      }
 
       while (cursor.moveToNext()) {
         T object = Reflect.on(clazz).create().get();
@@ -444,11 +430,6 @@ public class NeoTermDatabase {
     }
     List<T> list = new ArrayList<>();
     try (Cursor cursor = db.rawQuery(statement, null)) {
-      if (cursor == null) {
-        // DO NOT RETURN NULL
-        // null checks are ugly!
-        return Collections.emptyList();
-      }
 
       while (cursor.moveToNext()) {
         T object = Reflect.on(clazz).create().get();
@@ -600,7 +581,7 @@ public class NeoTermDatabase {
     }
 
     try (Cursor cursor = db.rawQuery(statement, null)) {
-      if (cursor != null && cursor.getCount() > 0) {
+      if (cursor.getCount() > 0) {
         cursor.moveToFirst();
         T bean = Reflect.on(tableClass).create().get();
         for (Field field : tableInfo.fieldToDataTypeMap.keySet()) {
@@ -644,7 +625,6 @@ public class NeoTermDatabase {
   public SQLiteDatabase getDatabase() {
     return db;
   }
-
   /**
    * 内部数据库监听器,负责派发接口.
    */
