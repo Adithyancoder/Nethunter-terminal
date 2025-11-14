@@ -1,5 +1,5 @@
 #!/data/data/com.offsec.nhterm/files/usr/bin_armv7l/bash
-# Version: 1.0.3
+# Version: 1.0.4
 
 # export path for android bins/tools
 export PATH="/data/data/com.offsec.nethunter/files/scripts:/data/data/com.offsec.nethunter/files/scripts/bin:/data/data/com.offsec.nhterm/files/home/.nhterm/script:/data/data/com.offsec.nhterm/files/usr/bin_armv7l:/data/data/com.offsec.nhterm/files/usr/sbin:/sbin:/system/bin:/system/xbin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/odm/bin:/vendor/bin:/product/bin:."
@@ -7,9 +7,33 @@ export PATH="/data/data/com.offsec.nethunter/files/scripts:/data/data/com.offsec
 unset LD_LIBRARY_PATH
 unset LD_PRELOAD
 export PS1="\[\e[1;32m\]\u [ \[\e[0m\]\w\[\e[1;32m\] ]$ \[\e[0m\]"
-# Find and remember su location
+
+##
+# Find and identify su solution
+# As different solutions have and use different args :(
+##
+
 SU1=$(which su)
-SU2="$SU1 -mm -s $@"
+
+M_SU="$SU1 -i -mm -s $*"
+K_SU="$SU1 -M -p -s $*"
+U_SU="$SU1 $*"
+
+# try obvious flags first
+for f in --version -v -V --help; do
+  o="$("$SU1" $f 2>/dev/null || true)"
+  case "$o" in
+    *MagiskSU* ) export SU2="${M_SU}";;
+    *SuperSU*|*superuser*|*Chainfire* ) export SU2="${U_SU}";;
+    *busybox* ) export SU2="${U_SU}";;
+    *toybox* ) export SU2="${U_SU}";;
+    *KernelSU* ) export SU2="${K_SU}";;
+  esac
+done
+
+##
+# Finally do the main script job
+##
 
 # clear out old view
 clear

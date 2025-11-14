@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:app="http://schemas.android.com/apk/res-auto">
 
   <Preference
     android:icon="@drawable/ic_general_white_36dp"
     android:summary="@string/general_settings_desc"
-    android:title="@string/general_settings">
-    <intent
-      android:targetClass="com.offsec.nhterm.ui.settings.GeneralSettingsActivity"
-      android:targetPackage="com.offsec.nhterm"/>
-  </Preference>
+    android:title="@string/general_settings"
+    app:fragment="com.offsec.nhterm.ui.settings.GeneralSettingsFragment" />
 
   <Preference
     android:icon="@drawable/ic_ui_white_36dp"
     android:summary="@string/ui_settings_desc"
-    android:title="@string/ui_settings">
-    <intent
-      android:targetClass="com.offsec.nhterm.ui.settings.UISettingsActivity"
-      android:targetPackage="com.offsec.nhterm"/>
-  </Preference>
+    android:title="@string/ui_settings"
+    app:fragment="com.offsec.nhterm.ui.settings.UISettingsFragment" />
 
   <Preference
     android:icon="@drawable/ic_customization_white_36dp"
@@ -25,7 +20,7 @@
     android:title="@string/customization_settings">
     <intent
       android:targetClass="com.offsec.nhterm.ui.customize.CustomizeActivity"
-      android:targetPackage="com.offsec.nhterm"/>
+      android:targetPackage="com.offsec.nhterm" />
   </Preference>
 
   <Preference
@@ -33,7 +28,7 @@
     android:title="@string/about">
     <intent
       android:targetClass="com.offsec.nhterm.ui.other.AboutActivity"
-      android:targetPackage="com.offsec.nhterm"/>
+      android:targetPackage="com.offsec.nhterm" />
   </Preference>
 
 </PreferenceScreen>

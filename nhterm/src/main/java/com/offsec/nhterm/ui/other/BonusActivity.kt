@@ -3,6 +3,7 @@ package com.offsec.nhterm.ui.other
 import android.animation.ObjectAnimator
 import android.content.res.ColorStateList
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.Path
@@ -13,14 +14,17 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.*
+import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.offsec.nhterm.R
+import kotlin.random.Random
 
 /**
  * @author kiva
@@ -31,6 +35,11 @@ class BonusActivity : AppCompatActivity() {
   private var mTapCount: Int = 0
   private var mKeyCount: Int = 0
   private var mInterpolator = PathInterpolator(0f, 0f, 0.5f, 1f)
+  private val NAMES = listOf(
+    "Martin Välba", "yesimxev", "Kimocoder",
+    "V0lk3n", "Hemal", "Robin",
+    "B1NKYB3AR", "jcadduono", "Mister X"
+  )
 
   private fun makeRipple(): Drawable {
     val idx = newColorIndex()
@@ -151,6 +160,12 @@ class BonusActivity : AppCompatActivity() {
       }
       mTapCount++
     }
+    im.setOnLongClickListener {
+      if (mTapCount > 5) {
+        startSnowFall()
+      }
+      true
+    }
 
     // Enable hardware keyboard input for TV compatibility.
     im.isFocusable = true
@@ -179,6 +194,31 @@ class BonusActivity : AppCompatActivity() {
       .setStartDelay(800)
       .start()
   }
+
+  private fun startSnowFall() {
+    val container = mLayout
+    for (name in NAMES) {
+      val nameView = TextView(this)
+      nameView.text = name
+      nameView.setTextColor(Color.WHITE)
+      nameView.textSize = 20f
+      val params = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.WRAP_CONTENT,
+        FrameLayout.LayoutParams.WRAP_CONTENT
+      )
+      nameView.x = Random.nextFloat() * container.width
+      container.addView(nameView, params)
+
+      val animator = ObjectAnimator.ofFloat(nameView, "translationY", -200f, container.height.toFloat()).apply {
+        interpolator = LinearInterpolator()
+        duration = Random.nextLong(4000, 8000)
+        startDelay = Random.nextLong(0, 6000)
+        repeatCount = ObjectAnimator.INFINITE
+      }
+      animator.start()
+    }
+  }
+
 
   companion object {
     internal val FLAVORS = intArrayOf(

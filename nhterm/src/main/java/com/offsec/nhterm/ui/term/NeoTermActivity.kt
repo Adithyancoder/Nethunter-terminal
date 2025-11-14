@@ -522,7 +522,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     val parameter = ShellParameter()
       .callback(sessionCallback)
-      .executablePath(filesDir.path + "/usr/bin_$sysarch/bash")
+      .executablePath("/data/data/com.offsec.nhterm/files/usr/bin_$sysarch/bash")
       .systemShell(true)
 
     val session = termService!!.createTermSession(parameter)
@@ -544,7 +544,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     val parameter = ShellParameter()
       .callback(sessionCallback)
-      .executablePath(filesDir.path + "/usr/bin_$sysarch/kali")
+      .executablePath("/data/data/com.offsec.nhterm/files/usr/bin_$sysarch/kali")
     val session = termService!!.createTermSession(parameter)
 
     session.mSessionName = generateSessionName("Kali Shell")
@@ -564,7 +564,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     val parameter = ShellParameter()
       .callback(sessionCallback)
-      .executablePath(filesDir.path + "/usr/bin_$sysarch/android-su")
+      .executablePath("/data/data/com.offsec.nhterm/files/usr/bin_$sysarch/android-su")
       .systemShell(true)
 
     val session = termService!!.createTermSession(parameter)
