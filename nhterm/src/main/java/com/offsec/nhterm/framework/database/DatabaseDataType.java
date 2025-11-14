@@ -34,5 +34,4 @@ public enum DatabaseDataType {
     this.nullable = nullable;
     return this;
   }
-
 }
