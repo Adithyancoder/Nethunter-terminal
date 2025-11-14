@@ -6,7 +6,6 @@ import java.util.Map;
 import static android.view.KeyEvent.*;
 
 public final class KeyHandler {
-
   public static final int KEYMOD_ALT = 0x80000000;
   public static final int KEYMOD_CTRL = 0x40000000;
   public static final int KEYMOD_SHIFT = 0x20000000;
@@ -15,8 +14,8 @@ public final class KeyHandler {
   private static final Map<String, Integer> TERMCAP_TO_KEYCODE = new HashMap<>();
 
   static {
-    // terminfo: http://pubs.opengroup.org/onlinepubs/7990989799/xcurses/terminfo.html
-    // termcap: http://man7.org/linux/man-pages/man5/termcap.5.html
+    // terminfo: https://pubs.opengroup.org/onlinepubs/7990989799/xcurses/terminfo.html
+    // termcap: https://man7.org/linux/man-pages/man5/termcap.5.html
     TERMCAP_TO_KEYCODE.put("%i", KEYMOD_SHIFT | KEYCODE_DPAD_RIGHT);
     TERMCAP_TO_KEYCODE.put("#2", KEYMOD_SHIFT | KEYCODE_MOVE_HOME); // Shifted home
     TERMCAP_TO_KEYCODE.put("#4", KEYMOD_SHIFT | KEYCODE_DPAD_LEFT);
