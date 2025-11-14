@@ -4,8 +4,8 @@ stages:
 - build
 
 before_script:
-- apt update && apt -y install openjdk-17-jdk
-- JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+- apt update && apt -y install openjdk-21-jdk
+- JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 - export GRADLE_USER_HOME=$(pwd)/.gradle
 - export PACKAGE=$(egrep '^[[:blank:]]+package' ./nhterm/src/main/AndroidManifest.xml | awk -F'[=>]' '{print $2}' | sed s/\"//g)
 - if test -z "${PACKAGE}"; then export PACKAGE=$(egrep '^[[:blank:]]+applicationId' ./nhterm/build.gradle | awk -F'"' '{print $2}'); fi
@@ -49,7 +49,7 @@ before_script:
   - mv ./nhterm/build/outputs/apk/release/nhterm-release-unsigned.apk result/${APK_NAME}.apk || mv ./nhterm/build/outputs/apk/release/*-release-unsigned.apk result/${APK_NAME}.apk
   - ls result/
   - if [ -d /tmp/result ]; then cp result/* /tmp/result; fi # Copy it to host if run locally 
-  
+
   artifacts:
     name: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA-$CI_JOB_NAME"
     paths:
@@ -67,7 +67,7 @@ assembleDebugAuto:
     - branches
     except:
     - master
-    
+
 assembleDebugManual:
     extends: .assembleDebug
     when: manual
@@ -76,11 +76,11 @@ assembleReleaseAuto:
     extends: .assembleRelease
     only:
     - master
-    
+
 assembleReleaseManual:
     extends: .assembleRelease
     when: manual
-    
+
 cache:
   key: ${CI_PROJECT_ID}
   paths:
