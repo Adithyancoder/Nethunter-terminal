@@ -1,5 +1,7 @@
 package com.offsec.nhterm.bridge;
 
+import androidx.annotation.NonNull;
+
 import java.util.Objects;
 
 /**
@@ -15,18 +17,15 @@ public class SessionId {
    * Presents current session in NeoTerm.
    */
   public static final SessionId CURRENT_SESSION = SessionId.of("current");
-
   private final String sessionId;
-
   SessionId(String sessionId) {
     this.sessionId = sessionId;
   }
-
   public String getSessionId() {
     return sessionId;
   }
 
-  @Override
+  @NonNull @Override
   public String toString() {
     return "TerminalSession { id = " + sessionId + " }";
   }
@@ -43,7 +42,6 @@ public class SessionId {
   public int hashCode() {
     return Objects.hash(sessionId);
   }
-
   public static SessionId of(String sessionId) {
     return new SessionId(sessionId);
   }

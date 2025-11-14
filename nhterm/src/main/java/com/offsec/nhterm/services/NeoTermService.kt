@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.*
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +18,7 @@ import com.offsec.nhterm.component.session.XSession
 import com.offsec.nhterm.ui.term.NeoTermActivity
 import com.offsec.nhterm.utils.NLog
 import com.offsec.nhterm.utils.Terminals
+import kotlin.text.compareTo
 
 /**
  * @author kiva
@@ -36,7 +38,15 @@ class NeoTermService : Service() {
     super.onCreate()
 
     createNotificationChannel()
-    startForeground(NOTIFICATION_ID, createNotification())
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      startForeground(
+        NOTIFICATION_ID,
+        createNotification(),
+        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+      )
+    } else {
+      startForeground(NOTIFICATION_ID, createNotification())
+    }
   }
 
   override fun onBind(intent: Intent): IBinder {
@@ -131,6 +141,11 @@ class NeoTermService : Service() {
   }
 
   private fun updateNotification() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        return
+      }
+    }
     val service = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     service.notify(NOTIFICATION_ID, createNotification())
   }
