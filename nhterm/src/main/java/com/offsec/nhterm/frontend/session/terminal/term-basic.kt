@@ -38,7 +38,7 @@ open class BasicSessionCallback(var terminalView: TerminalView) : TerminalSessio
 class BasicViewClient(val terminalView: TerminalView) :
     com.offsec.nhterm.frontend.session.view.TerminalViewClient {
   override fun onScale(scale: Float): Float {
-    if (scale < 0.9f || scale > 1.1f) {
+    if (scale !in 0.9f..1.1f) {
       val increase = scale > 1f
       val changedSize = (if (increase) 1 else -1) * 2
       val fontSize = NeoPreference.validateFontSize(terminalView.textSize + changedSize)
