@@ -219,7 +219,6 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
       // In order to switch to it when entering NeoTermActivity
       NeoPreference.storeCurrentSession(session)
 
-      ////
       // All needed for clean start
       // ( also takes care of ghost sessions that happened before... )
       val intent = Intent(this, NeoTermActivity::class.java)
