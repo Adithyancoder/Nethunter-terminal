@@ -1,7 +1,6 @@
 package com.offsec.nhterm.frontend.session.view;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -9,9 +8,6 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -26,6 +22,8 @@ import android.widget.Scroller;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
+
 import com.offsec.nhterm.backend.EmulatorDebug;
 import com.offsec.nhterm.backend.KeyHandler;
 import com.offsec.nhterm.backend.TerminalBuffer;
@@ -35,13 +33,13 @@ import com.offsec.nhterm.component.completion.OnAutoCompleteListener;
 
 import com.offsec.nhterm.R;
 import com.offsec.nhterm.backend.*;
-import com.offsec.nhterm.component.completion.OnAutoCompleteListener;
+
+import java.util.Objects;
 
 /**
  * View displaying and interacting with a {@link TerminalSession}.
  */
 public final class TerminalView extends View {
-
   /**
    * Log view key and IME events.
    */
@@ -56,23 +54,19 @@ public final class TerminalView extends View {
    * Our terminal emulator whose session is {@link #mTermSession}.
    */
   TerminalEmulator mEmulator;
-
   TerminalRenderer mRenderer;
-
   TerminalViewClient mClient;
 
   /**
    * The top row of text to display. Ranges from -activeTranscriptRows to 0.
    */
   int mTopRow;
-
   boolean mIsSelectingText = false, mIsDraggingLeftSelection, mInitialTextSelection;
   int mSelX1 = -1, mSelX2 = -1, mSelY1 = -1, mSelY2 = -1;
   float mSelectionDownX, mSelectionDownY;
   private ActionMode mActionMode;
   private BitmapDrawable mLeftSelectionHandle, mRightSelectionHandle;
   private static Toast toast;
-
   float mScaleFactor = 1.f;
   /* final */ GestureAndScaleRecognizer mGestureRecognizer;
 
@@ -105,6 +99,7 @@ public final class TerminalView extends View {
 
   private boolean mAccessibilityEnabled;
 
+  @SuppressWarnings("unused")
   public final static int KEY_EVENT_SOURCE_VIRTUAL_KEYBOARD = KeyCharacterMap.VIRTUAL_KEYBOARD; // -1
 
   /** The {@link KeyEvent} is generated from a non-physical device, like if 0 value is returned by {@link KeyEvent#getDeviceId()}. */
@@ -358,7 +353,7 @@ public final class TerminalView extends View {
         if (LOG_KEY_EVENTS) Log.i(EmulatorDebug.LOG_TAG, "IME: finishComposingText()");
         super.finishComposingText();
 
-        sendTextToTerminal(getEditable());
+        sendTextToTerminal(Objects.requireNonNull(getEditable()));
         getEditable().clear();
         return true;
       }
@@ -373,6 +368,7 @@ public final class TerminalView extends View {
         if (mEmulator == null) return true;
 
         Editable content = getEditable();
+        assert content != null;
         sendTextToTerminal(content);
         if (onAutoCompleteListener != null) {
           onAutoCompleteListener.onCompletionRequired(content.toString());
@@ -615,7 +611,6 @@ public final class TerminalView extends View {
 
   @SuppressLint("ClickableViewAccessibility")
   @Override
-  @TargetApi(23)
   public boolean onTouchEvent(MotionEvent ev) {
     if (mEmulator == null) return true;
     final int action = ev.getAction();
@@ -664,8 +659,14 @@ public final class TerminalView extends View {
             mSelY2 = tmpY1;
           }
 
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            mActionMode.invalidateContentRect();
+          // Use invalidateContentRect when available (API 23+), otherwise fall back to invalidate
+          if (mActionMode != null) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+              mActionMode.invalidateContentRect();
+            } else {
+              mActionMode.invalidate();
+            }
+          }
           invalidate();
           break;
         default:
@@ -741,8 +742,10 @@ public final class TerminalView extends View {
       return true;
     } else if (event.isSystem() && (!mClient.shouldBackButtonBeMappedToEscape() || keyCode != KeyEvent.KEYCODE_BACK)) {
       return super.onKeyDown(keyCode, event);
-    } else if (event.getAction() == KeyEvent.ACTION_MULTIPLE && keyCode == KeyEvent.KEYCODE_UNKNOWN) {
-      mTermSession.write(event.getCharacters());
+    } else if (keyCode == KeyEvent.KEYCODE_UNKNOWN && event.getUnicodeChar() != 0) {
+      // ACTION_MULTIPLE is deprecated; detect multi-character/IME input by checking
+      // for unknown keycodes that still provide a unicode character.
+      mTermSession.write(getKeyEventCharacters(event));
       return true;
     }
 
@@ -764,9 +767,8 @@ public final class TerminalView extends View {
 
     // Clear Ctrl since we handle that ourselves:
     int bitsToClear = KeyEvent.META_CTRL_MASK;
-    if (rightAltDownFromEvent) {
-      // Let right Alt/Alt Gr be used to compose characters.
-    } else {
+    // If right Alt (AltGr) is pressed, allow composition; otherwise clear left-alt bits
+    if (!rightAltDownFromEvent) {
       // Use left alt to send to terminal (e.g. Left Alt+B to jump back a word), so remove:
       bitsToClear |= KeyEvent.META_ALT_ON | KeyEvent.META_ALT_LEFT_ON;
     }
@@ -939,7 +941,6 @@ public final class TerminalView extends View {
     int viewHeight = getHeight();
     if (viewWidth == 0 || viewHeight == 0 || mTermSession == null) return;
 
-
     // Set to 80 and 24 if you want to enable vttest.
     int newColumns = Math.max(4, (int) (viewWidth / mRenderer.mFontWidth));
     int newRows = Math.max(4, (viewHeight - mRenderer.mFontLineSpacingAndAscent) / mRenderer.mFontLineSpacing);
@@ -955,7 +956,7 @@ public final class TerminalView extends View {
   }
 
   @Override
-  protected void onDraw(Canvas canvas) {
+  protected void onDraw(@NonNull Canvas canvas) {
     if (mEmulator == null) {
       canvas.drawColor(0XFF000000);
     } else {
@@ -981,15 +982,14 @@ public final class TerminalView extends View {
   /**
    * Toggle text selection mode in the view.
    */
-  @TargetApi(23)
   public void toggleSelectingText(MotionEvent ev) {
     mIsSelectingText = !mIsSelectingText;
     mClient.copyModeChanged(mIsSelectingText);
 
     if (mIsSelectingText) {
       if (mLeftSelectionHandle == null) {
-        mLeftSelectionHandle = (BitmapDrawable) getContext().getDrawable(R.drawable.text_select_handle_left_material);
-        mRightSelectionHandle = (BitmapDrawable) getContext().getDrawable(R.drawable.text_select_handle_right_material);
+        mLeftSelectionHandle = (BitmapDrawable) AppCompatResources.getDrawable(getContext(), R.drawable.text_select_handle_left_material);
+        mRightSelectionHandle = (BitmapDrawable) AppCompatResources.getDrawable(getContext(), R.drawable.text_select_handle_right_material);
       }
 
       int cx = (int) (ev.getX() / mRenderer.mFontWidth);
@@ -1063,37 +1063,42 @@ public final class TerminalView extends View {
         }
       };
 
-      mActionMode = startActionMode(new ActionMode.Callback2() {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-          return callback.onCreateActionMode(mode, menu);
-        }
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        ActionMode.Callback2 cb2 = new ActionMode.Callback2() {
+          @Override
+          public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            return callback.onCreateActionMode(mode, menu);
+          }
 
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-          return false;
-        }
+          @Override
+          public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+          }
 
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-          return callback.onActionItemClicked(mode, item);
-        }
+          @Override
+          public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            return callback.onActionItemClicked(mode, item);
+          }
 
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-          // Ignore.
-        }
+          @Override
+          public void onDestroyActionMode(ActionMode mode) {
+            // Ignore.
+          }
 
-        @Override
-        public void onGetContentRect(ActionMode mode, View view, Rect outRect) {
-          int x1 = Math.round(mSelX1 * mRenderer.mFontWidth);
-          int x2 = Math.round(mSelX2 * mRenderer.mFontWidth);
-          int y1 = Math.round((mSelY1 - mTopRow) * mRenderer.mFontLineSpacing);
-          int y2 = Math.round((mSelY2 + 1 - mTopRow) * mRenderer.mFontLineSpacing);
-          outRect.set(Math.min(x1, x2), y1, Math.max(x1, x2), y2);
-        }
-      }, ActionMode.TYPE_FLOATING);
-      invalidate();
+          @Override
+          public void onGetContentRect(ActionMode mode, View view, Rect outRect) {
+            int x1 = Math.round(mSelX1 * mRenderer.mFontWidth);
+            int x2 = Math.round(mSelX2 * mRenderer.mFontWidth);
+            int y1 = (mSelY1 - mTopRow) * mRenderer.mFontLineSpacing;
+            int y2 = (mSelY2 + 1 - mTopRow) * mRenderer.mFontLineSpacing;
+            outRect.set(Math.min(x1, x2), y1, Math.max(x1, x2), y2);
+          }
+        };
+        mActionMode = startActionMode(cb2, ActionMode.TYPE_FLOATING);
+      } else {
+        mActionMode = startActionMode(callback);
+      }
+       invalidate();
     } else {
       mActionMode.finish();
       mSelX1 = mSelY1 = mSelX2 = mSelY2 = -1;
@@ -1101,13 +1106,14 @@ public final class TerminalView extends View {
     }
   }
 
+  @SuppressWarnings("unused")
   public TerminalSession getCurrentSession() {
     return mTermSession;
   }
 
-
   private OnAutoCompleteListener onAutoCompleteListener;
 
+  @SuppressWarnings("unused")
   public OnAutoCompleteListener getOnAutoCompleteListener() {
     return onAutoCompleteListener;
   }
@@ -1128,5 +1134,25 @@ public final class TerminalView extends View {
 
   public void setEnableWordBasedIme(boolean mEnableWordBasedIme) {
     this.mEnableWordBasedIme = mEnableWordBasedIme;
+  }
+
+  /**
+   * Extract characters from a KeyEvent without calling the deprecated getCharacters() when possible.
+   * For international/multi-character input ACTION_MULTIPLE events, try to use getUnicodeChar()
+   * and repeat according to repeatCount; fall back to getCharacters() only if Unicode extraction fails.
+   */
+  private static String getKeyEventCharacters(KeyEvent event) {
+    // Try to obtain a single unicode code point from the event using the non-deprecated API.
+    int unicode = event.getUnicodeChar();
+    if (unicode != 0) {
+      int repeat = Math.max(1, event.getRepeatCount());
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < repeat; i++) {
+        sb.appendCodePoint(unicode);
+      }
+      return sb.toString();
+    }
+
+    return "";
   }
 }
