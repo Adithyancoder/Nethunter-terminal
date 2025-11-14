@@ -52,24 +52,13 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   lateinit var tabSwitcher: TabSwitcher
   private lateinit var fullScreenHelper: FullScreenHelper
   lateinit var toolbar: Toolbar
-
   var addSessionListener = createAddSessionListener()
   private var termService: NeoTermService? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val SDCARD_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 1
-
     NeoPermission.initAppPermission(this, NeoPermission.REQUEST_APP_PERMISSION)
-
-    if (ContextCompat.checkSelfPermission(
-        this,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-      ) != PackageManager.PERMISSION_GRANTED
-    ) {
-      ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), SDCARD_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE)
-    }
 
     val fullscreen = NeoPreference.isFullScreenEnabled()
     if (fullscreen) {
@@ -95,7 +84,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
             // When minimizing kb in nano the colors get changed to default value
             // Updating colors here fixes this issue
-            update_colors()
+            updateColors()
           }
         }
       },
@@ -206,7 +195,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         override fun onSwitcherShown(tabSwitcher: TabSwitcher) {
           toolbar.setNavigationIcon(R.drawable.ic_add_box_white_24dp)
           toolbar.setNavigationOnClickListener(addSessionListener)
-          toolbar.setBackgroundResource(android.R.color.transparent)
+          toolbar.setBackgroundResource(R.color.colorPrimary)
           toolbar.animate().alpha(0f).setDuration(300).withEndAction {
             toolbar.alpha = 1f
           }.start()
@@ -225,7 +214,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
         }
 
         override fun onTabAdded(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
-          update_colors()
+          updateColors()
         }
 
         override fun onTabRemoved(tabSwitcher: TabSwitcher, index: Int, tab: Tab, animation: Animation) {
@@ -285,12 +274,6 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
   override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
     when (keyCode) {
-      KeyEvent.KEYCODE_BACK -> {
-        if (event?.action == KeyEvent.ACTION_DOWN && tabSwitcher.isSwitcherShown && tabSwitcher.count > 0) {
-          toggleSwitcher(showSwitcher = false, easterEgg = false)
-          return true
-        }
-      }
       KeyEvent.KEYCODE_MENU -> {
         if (toolbar.isOverflowMenuShowing) {
           toolbar.hideOverflowMenu()
@@ -349,7 +332,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
 
     if (!isRecreating()) {
       enterMain()
-      update_colors()
+      updateColors()
     }
   }
 
@@ -879,7 +862,7 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
     }
   }
 
-  fun update_colors() {
+  fun updateColors() {
     // Simple fix to bug on custom color
     Handler(Looper.getMainLooper()).postDelayed(
       {
