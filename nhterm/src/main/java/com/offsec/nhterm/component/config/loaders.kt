@@ -143,7 +143,7 @@ class OldConfigureLoader(private val configFile: File) : IConfigureLoader {
         if (config.version < 0) {
           throw RuntimeException("Not a valid shortcut config file")
         }
-        if (config.programNames.size == 0) {
+        if (config.programNames.isEmpty()) {
           throw RuntimeException("At least one program name should be given")
         }
         return config
