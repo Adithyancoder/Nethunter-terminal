@@ -123,5 +123,4 @@ public class TableHelper {
   public static void clearCache() {
     classToTableInfoMap.clear();
   }
-
 }
