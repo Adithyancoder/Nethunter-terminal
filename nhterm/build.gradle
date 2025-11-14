@@ -1,21 +1,26 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+    options.deprecation = true
+}
+
 android {
   compileSdkVersion rootProject.ext.android.COMPILE_SDK_VERSION
 
   defaultConfig {
-    applicationId "com.offsec.nhterm"
+    applicationId = "com.offsec.nhterm"
     minSdkVersion rootProject.ext.android.MIN_SDK_VERSION
     targetSdkVersion rootProject.ext.android.TARGET_SDK_VERSION
-    versionCode rootProject.ext.versionCode
-    versionName rootProject.ext.versionName
-    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    versionCode = rootProject.ext.versionCode
+    versionName = rootProject.ext.versionName
+    testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
     resourceConfigurations += ['zh-rCN', 'zh-rTW']
     externalNativeBuild {
       cmake {
-        cppFlags "-std=c++11"
-        abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+        cppFlags += "-std=c++11"
+        abiFilters += ['arm64-v8a', 'armeabi-v7a', 'x86_64']
       }
     }
     signingConfigs {
@@ -34,33 +39,32 @@ android {
   }
   buildTypes {
     release {
-      debuggable false
+      debuggable = false
     }
   }
   externalNativeBuild {
     cmake {
-      path "CMakeLists.txt"
+      path = "CMakeLists.txt"
     }
   }
   compileOptions {
-    targetCompatibility 17
-    sourceCompatibility 17
+    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_17
   }
-  kotlinOptions {
-    freeCompilerArgs = ["-Xallow-result-return-type"]
-    jvmTarget = "17"
+  kotlin {
+    jvmToolchain(17)
   }
   lint {
-    abortOnError false
-    checkReleaseBuilds false
+    abortOnError = false
+    checkReleaseBuilds = false
   }
   packaging {
     jniLibs {
-      useLegacyPackaging true
+      useLegacyPackaging = true
     }
   }
 
-  namespace 'com.offsec.nhterm'
+  namespace = 'com.offsec.nhterm'
 }
 
 dependencies {
@@ -77,15 +81,14 @@ dependencies {
   implementation 'de.psdev.licensesdialog:licensesdialog:2.2.0'
   implementation 'com.github.GrenderG:Color-O-Matic:1.1.5'
   implementation 'com.github.topjohnwu.libsu:core:6.0.0'
-
   implementation 'androidx.annotation:annotation:1.9.1'
-  implementation 'androidx.core:core-ktx:1.17.0'
+  implementation 'androidx.core:core-ktx:1.13.1'
   implementation 'androidx.cardview:cardview:1.0.0'
   implementation 'androidx.appcompat:appcompat:1.7.1'
   implementation 'androidx.appcompat:appcompat-resources:1.7.1'
   implementation 'com.google.android.material:material:1.13.0'
   implementation 'androidx.preference:preference-ktx:1.2.1'
-  implementation 'androidx.compose.material:material:1.9.4'
+  implementation 'androidx.compose.material:material:1.7.8'
 
   // Backports for lower api levels
   implementation 'com.llamalab.safs:safs-core:0.2.0'
