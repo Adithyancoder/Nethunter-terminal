@@ -29,8 +29,8 @@ export USER=root
 export MAIL=/var/mail/root
 export LOGNAME=root
 export SHLVL=1
-# Lets pass a binky export here too ;)
-export YOU_KNOW_WHAT=THIS_IS_KALI_LINUX_NETHUNTER_FROM_JAVA_BINKY
+# Lets pass a binkybear export here too ;)
+export YOU_KNOW_WHAT=THIS_IS_KALI_LINUX_NETHUNTER_FROM_JAVA_BINKYB3AR
 
 $SU2 /system/bin/chroot /data/local/nhsystem/kalifs su
 
