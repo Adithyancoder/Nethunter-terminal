@@ -219,10 +219,10 @@ class NeoTermService : Service() {
   }
 
   companion object {
-    val ACTION_SERVICE_STOP = "neoterm.action.service.stop"
-    val ACTION_ACQUIRE_LOCK = "neoterm.action.service.lock.acquire"
-    val ACTION_RELEASE_LOCK = "neoterm.action.service.lock.release"
-    private val NOTIFICATION_ID = 52019
-    val DEFAULT_CHANNEL_ID = "neoterm_notification_channel"
+    const val ACTION_SERVICE_STOP = "neoterm.action.service.stop"
+    const val ACTION_ACQUIRE_LOCK = "neoterm.action.service.lock.acquire"
+    const val ACTION_RELEASE_LOCK = "neoterm.action.service.lock.release"
+    private const val NOTIFICATION_ID = 52019
+    const val DEFAULT_CHANNEL_ID = "neoterm_notification_channel"
   }
 }
