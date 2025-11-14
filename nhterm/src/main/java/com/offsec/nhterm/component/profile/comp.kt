@@ -26,7 +26,13 @@ class ProfileComponent : ConfigFileBasedComponent<NeoProfile>(NeoTermPath.PROFIL
 
     if (profileClass != null) {
       NLog.e("ProfileComponent", "Loaded profile: " + profileClass.name)
-      return profileClass.newInstance()
+      try {
+        val ctor = profileClass.getDeclaredConstructor()
+        if (!ctor.isAccessible) ctor.isAccessible = true
+        return ctor.newInstance() as NeoProfile
+      } catch (e: Exception) {
+        throw RuntimeException("Unable to create profile instance: ${profileClass.name}", e)
+      }
     }
 
     throw IllegalArgumentException("No proper profile registry found")
