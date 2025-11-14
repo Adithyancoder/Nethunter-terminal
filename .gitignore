@@ -38,3 +38,5 @@ release/
 /captures
 .externalNativeBuild
 
+# Logs
+*.log
