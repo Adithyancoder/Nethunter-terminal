@@ -75,7 +75,7 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.android.KOTLIN_VERSION}"
 
   implementation 'org.greenrobot:eventbus:3.3.1'
-  implementation 'com.github.wrdlbrnft:modular-adapter:0.3.0.22'
+  implementation 'com.github.wrdlbrnft:modular-adapter:0.3.0.31'
   implementation 'com.github.wrdlbrnft:sorted-list-adapter:0.3.0.27'
   implementation 'com.simplecityapps:recyclerview-fastscroll:2.0.1'
   implementation 'de.psdev.licensesdialog:licensesdialog:2.2.0'
