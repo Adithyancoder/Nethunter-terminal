@@ -100,9 +100,7 @@ public class Reflect {
       return null;
     }
 
-    if (accessible instanceof Member) {
-      Member member = (Member) accessible;
-
+    if (accessible instanceof Member member) {
       if (Modifier.isPublic(member.getModifiers()) &&
         Modifier.isPublic(member.getDeclaringClass().getModifiers())) {
 
