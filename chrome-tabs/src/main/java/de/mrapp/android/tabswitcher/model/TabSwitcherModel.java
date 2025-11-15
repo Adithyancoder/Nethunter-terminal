@@ -1208,23 +1208,44 @@ public class TabSwitcherModel implements Model, Restorable {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public final void restoreInstanceState(@Nullable final Bundle savedInstanceState) {
     if (savedInstanceState != null) {
       firstVisibleTabIndex = savedInstanceState.getInt(FIRST_VISIBLE_TAB_INDEX_EXTRA, -1);
       firstVisibleTabPosition =
         savedInstanceState.getFloat(FIRST_VISIBLE_TAB_POSITION_EXTRA, -1);
-      logLevel = (LogLevel) savedInstanceState.getSerializable(LOG_LEVEL_EXTRA);
-      tabs = savedInstanceState.getParcelableArrayList(TABS_EXTRA);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        logLevel = savedInstanceState.getSerializable(LOG_LEVEL_EXTRA, LogLevel.class);
+        tabs = savedInstanceState.getParcelableArrayList(TABS_EXTRA, Tab.class);
+      } else {
+        logLevel = (LogLevel) savedInstanceState.getSerializable(LOG_LEVEL_EXTRA);
+        tabs = savedInstanceState.getParcelableArrayList(TABS_EXTRA);
+      }
       switcherShown = savedInstanceState.getBoolean(SWITCHER_SHOWN_EXTRA);
-      selectedTab = savedInstanceState.getParcelable(SELECTED_TAB_EXTRA);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        selectedTab = savedInstanceState.getParcelable(SELECTED_TAB_EXTRA, Tab.class);
+      } else {
+        selectedTab = savedInstanceState.getParcelable(SELECTED_TAB_EXTRA);
+      }
       padding = savedInstanceState.getIntArray(PADDING_EXTRA);
       tabIconId = savedInstanceState.getInt(TAB_ICON_ID_EXTRA);
-      tabIconBitmap = savedInstanceState.getParcelable(TAB_ICON_BITMAP_EXTRA);
-      tabBackgroundColor = savedInstanceState.getParcelable(TAB_BACKGROUND_COLOR_EXTRA);
-      tabTitleTextColor = savedInstanceState.getParcelable(TAB_TITLE_TEXT_COLOR_EXTRA);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        tabIconBitmap = savedInstanceState.getParcelable(TAB_ICON_BITMAP_EXTRA, Bitmap.class);
+        tabBackgroundColor = savedInstanceState.getParcelable(TAB_BACKGROUND_COLOR_EXTRA, ColorStateList.class);
+        tabTitleTextColor = savedInstanceState.getParcelable(TAB_TITLE_TEXT_COLOR_EXTRA, ColorStateList.class);
+      } else {
+        tabIconBitmap = savedInstanceState.getParcelable(TAB_ICON_BITMAP_EXTRA);
+        tabBackgroundColor = savedInstanceState.getParcelable(TAB_BACKGROUND_COLOR_EXTRA);
+        tabTitleTextColor = savedInstanceState.getParcelable(TAB_TITLE_TEXT_COLOR_EXTRA);
+      }
       tabCloseButtonIconId = savedInstanceState.getInt(TAB_CLOSE_BUTTON_ICON_ID_EXTRA);
-      tabCloseButtonIconBitmap =
-        savedInstanceState.getParcelable(TAB_CLOSE_BUTTON_ICON_BITMAP_EXTRA);
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        tabCloseButtonIconBitmap =
+          savedInstanceState.getParcelable(TAB_CLOSE_BUTTON_ICON_BITMAP_EXTRA, Bitmap.class);
+      } else {
+        tabCloseButtonIconBitmap =
+          savedInstanceState.getParcelable(TAB_CLOSE_BUTTON_ICON_BITMAP_EXTRA);
+      }
       showToolbars = savedInstanceState.getBoolean(SHOW_TOOLBARS_EXTRA);
       toolbarTitle = savedInstanceState.getCharSequence(TOOLBAR_TITLE_EXTRA);
       childRecyclerAdapter.restoreInstanceState(savedInstanceState);

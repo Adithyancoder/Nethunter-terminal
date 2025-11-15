@@ -163,6 +163,7 @@ public abstract class TabSwitcherDecorator extends AbstractViewHolderAdapter {
    * @param savedInstanceState The bundle, which has previously been used to save the state of the view as an
    *                           instance of the class {@link Bundle} or null, if no saved state is available
    */
+  @SuppressWarnings("deprecation")
   public final void applyDecorator(@NonNull final Context context,
                                    @NonNull final TabSwitcher tabSwitcher,
                                    @NonNull final View view, @NonNull final Tab tab,
@@ -171,8 +172,12 @@ public abstract class TabSwitcherDecorator extends AbstractViewHolderAdapter {
     int viewType = getViewType(tab, index);
 
     if (savedInstanceState != null) {
-      SparseArray<Parcelable> viewStates =
-        savedInstanceState.getSparseParcelableArray(VIEW_HIERARCHY_STATE_EXTRA);
+      SparseArray<Parcelable> viewStates;
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        viewStates = savedInstanceState.getSparseParcelableArray(VIEW_HIERARCHY_STATE_EXTRA, Parcelable.class);
+      } else {
+        viewStates = savedInstanceState.getSparseParcelableArray(VIEW_HIERARCHY_STATE_EXTRA);
+      }
 
       if (viewStates != null) {
         view.restoreHierarchyState(viewStates);

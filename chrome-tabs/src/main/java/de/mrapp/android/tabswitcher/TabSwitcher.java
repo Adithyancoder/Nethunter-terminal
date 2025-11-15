@@ -33,7 +33,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.widget.Toolbar.OnMenuItemClickListener;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Pair;
-import androidx.core.view.ViewCompat;
 import de.mrapp.android.tabswitcher.layout.AbstractTabSwitcherLayout;
 import de.mrapp.android.tabswitcher.layout.AbstractTabSwitcherLayout.LayoutListenerWrapper;
 import de.mrapp.android.tabswitcher.layout.TabSwitcherLayout;
@@ -118,9 +117,14 @@ public class TabSwitcher extends FrameLayout implements TabSwitcherLayout, Model
      * @param source The parcel to read read from as a instance of the class {@link Parcel}. The
      *               parcel may not be null
      */
+    @SuppressWarnings("deprecation")
     private TabSwitcherState(@NonNull final Parcel source) {
       super(source);
-      layoutPolicy = (LayoutPolicy) source.readSerializable();
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        layoutPolicy = source.readSerializable(getClass().getClassLoader(), LayoutPolicy.class);
+      } else {
+        layoutPolicy = (LayoutPolicy) source.readSerializable();
+      }
       modelState = source.readBundle(getClass().getClassLoader());
     }
 
@@ -220,7 +224,7 @@ public class TabSwitcher extends FrameLayout implements TabSwitcherLayout, Model
     final ViewGroup tabContainer = getTabContainer();
     assert tabContainer != null;
 
-    if (ViewCompat.isLaidOut(tabContainer)) {
+    if (tabContainer.isLaidOut()) {
       this.layout.onGlobalLayout();
     } else {
       tabContainer.getViewTreeObserver()
