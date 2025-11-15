@@ -32,7 +32,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.util.Pair;
-import androidx.core.view.ViewCompat;
 import de.mrapp.android.tabswitcher.*;
 import de.mrapp.android.tabswitcher.SwipeAnimation.SwipeDirection;
 import de.mrapp.android.tabswitcher.iterator.AbstractTabItemIterator;
@@ -957,7 +956,7 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
         viewRecycler.inflate(tabItem);
         View view = tabItem.getView();
 
-        if (!ViewCompat.isLaidOut(view)) {
+        if (!view.isLaidOut()) {
           view.getViewTreeObserver().addOnGlobalLayoutListener(
             new LayoutListenerWrapper(view,
               createShowSwitcherLayoutListener(tabItem)));
@@ -3526,5 +3525,4 @@ public class PhoneTabSwitcherLayout extends AbstractTabSwitcherLayout
       "Ended swiping tab at index " + tabItem.getIndex() + ". Tab will " +
         (remove ? "" : "not ") + "be removed");
   }
-
 }
