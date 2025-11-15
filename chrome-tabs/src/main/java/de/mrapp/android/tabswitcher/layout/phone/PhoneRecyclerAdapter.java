@@ -17,7 +17,9 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -321,9 +323,9 @@ public class PhoneRecyclerAdapter extends AbstractViewRecycler.Adapter<TabItem, 
     }
 
     Drawable background = view.getBackground();
-    background.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+    background.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
     Drawable border = viewHolder.borderView.getBackground();
-    border.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
+    border.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
   }
 
   /**
