@@ -1,8 +1,8 @@
 #!/data/data/com.offsec.nhterm/files/usr/bin_aarch64/bash
-# Version: 1.0.8
-# android-su: A wrapper script to invoke 'su' on Android devices,
-# detecting the su solution and using appropriate arguments.
-# Compatible with MagiskSU, SuperSU, KernelSU, busybox su, and toybox su.
+# Version: 1.0.8-magisk-kimo-these-nuts
+
+# Log file path (external storage)
+LOG_FILE="/sdcard/su.log"
 
 # Enable debug logging by setting ANDROID_SU_DEBUG=1 in the environment
 ANDROID_SU_DEBUG=${ANDROID_SU_DEBUG:-0}
@@ -10,7 +10,13 @@ log_debug() {
   if [ "$ANDROID_SU_DEBUG" = "1" ]; then
     # Timestamp + message to stderr
     echo "[android-su][DEBUG] $(date '+%Y-%m-%d %H:%M:%S') $*" >&2
-    # File logging removed
+    # Also append to log file if writable
+    if [ -n "$LOG_FILE" ]; then
+      # Best-effort logging; don't fail if we can't write
+      {
+        echo "[android-su][DEBUG] $(date '+%Y-%m-%d %H:%M:%S') $*" >>"$LOG_FILE" 2>/dev/null || true
+      } &
+    fi
   fi
 }
 
@@ -117,7 +123,7 @@ log_debug "Final SU_FLAVOR=$SU_FLAVOR"
 log_debug "Final SU2 command: ${SU2[*]}"
 
 ##
-# Main job
+# Main job for wieners, sorry, WHINERS
 ##
 
 clear
