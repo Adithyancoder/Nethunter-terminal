@@ -18,6 +18,8 @@ buildscript {
   ext {
     //version=YYYY:MM:VV:RR (Either "VV" for stable version OR "RR" for pre-release candidate (e.g. 0001 for rc1))
     //noinspection HighAppVersionCode
+    versionCode=2025040100
+    versionName="2025.4"
   }
 
   // Assign properties on ext using the explicit assignment syntax to avoid
