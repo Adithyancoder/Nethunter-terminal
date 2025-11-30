@@ -121,13 +121,11 @@ public class SQLStatementHelper {
    * @return
    */
   public static String findByWhere(TableInfo tableInfo, String where) {
-    String statement = "SELECT * FROM " +
+    return "SELECT * FROM " +
       tableInfo.tableName +
       " " +
       "WHERE " +
       where;
-
-    return statement;
   }
 
   /**
@@ -138,13 +136,11 @@ public class SQLStatementHelper {
    * @return
    */
   public static String deleteByWhere(TableInfo tableInfo, String where) {
-    String statement = "DELETE FROM " +
+    return "DELETE FROM " +
       tableInfo.tableName +
       " " +
       "WHERE " +
       where;
-
-    return statement;
   }
 
   /**
@@ -173,7 +169,6 @@ public class SQLStatementHelper {
     }
 
     builder.deleteCharAt(builder.length() - 1);//删除最后一个逗号
-
     builder.append(" WHERE ");
     builder.append(where);
     return builder.toString();
@@ -188,5 +183,4 @@ public class SQLStatementHelper {
   public static String selectTable(String tableName) {
     return "SELECT * FROM " + tableName;
   }
-
 }

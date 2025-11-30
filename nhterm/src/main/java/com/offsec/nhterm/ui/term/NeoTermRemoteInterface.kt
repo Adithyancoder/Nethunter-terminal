@@ -4,11 +4,11 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.widget.ArrayAdapter
 import android.widget.ListView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.offsec.nhterm.App
@@ -60,11 +60,6 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
 
   override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
     termService = (service as NeoTermService.NeoTermBinder).service
-    if (termService == null) {
-      finish()
-      return
-    }
-
     handleIntent()
   }
 
@@ -97,9 +92,16 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
 
   private fun handleTermHere() {
     if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-      val extra = intent.extras?.get(Intent.EXTRA_STREAM)
-      if (extra is Uri) {
-        val path = this.getPathOfMediaUri(extra)
+      // Prefer the typed API on T (API 33)+ to avoid deprecated Bundle#get
+      val extraUri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+      } else {
+        @Suppress("DEPRECATION")
+        intent.getParcelableExtra(Intent.EXTRA_STREAM)
+      }
+
+      if (extraUri != null) {
+        val path = this.getPathOfMediaUri(extraUri)
         val file = path?.let { File(it) }
         val dirPath = if (file?.isDirectory == true) path else file?.parent
         val command = "cd " + Terminals.escapeString(dirPath)
@@ -127,17 +129,26 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
 
     if (intent.hasExtra(Intent.EXTRA_STREAM)) {
       // action send
-      when (val extra = intent.extras?.get(Intent.EXTRA_STREAM)) {
-        is ArrayList<*> -> {
-          extra.takeWhile { it is Uri }
-            .mapTo(filesToHandle) {
-              val uri = it as Uri
-              this.getPathOfMediaUri(uri)?.let { it1 -> File(it1).absolutePath }.toString()
-            }
+      // Try to obtain an ArrayList<Uri> first, then a single Uri.
+      val uriList: ArrayList<Uri>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+      } else {
+        @Suppress("DEPRECATION")
+        intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+      }
+
+      if (uriList != null && uriList.isNotEmpty()) {
+        uriList.forEach { uri ->
+          this.getPathOfMediaUri(uri)?.let { File(it).absolutePath }?.let { filesToHandle.add(it) }
         }
-        is Uri -> {
-          this.getPathOfMediaUri(extra)?.let { File(it).absolutePath }?.let { filesToHandle.add(it) }
+      } else {
+        val singleUri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+        } else {
+          @Suppress("DEPRECATION")
+          intent.getParcelableExtra(Intent.EXTRA_STREAM)
         }
+        singleUri?.let { this.getPathOfMediaUri(it)?.let { path -> filesToHandle.add(File(path).absolutePath) } }
       }
     } else if (intent.data != null) {
       // action view
@@ -162,11 +173,11 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
     filesList.setOnItemClickListener { _, _, position, _ ->
       MaterialAlertDialogBuilder(this@NeoTermRemoteInterface, R.style.DialogStyle)
         .setMessage(R.string.confirm_remove_file_from_list)
-        .setPositiveButton(android.R.string.yes) { _, _ ->
+        .setPositiveButton(android.R.string.ok) { _, _ ->
           filesToHandle.removeAt(position)
           filesAdapter.notifyDataSetChanged()
         }
-        .setNegativeButton(android.R.string.no, null)
+        .setNegativeButton(android.R.string.cancel, null)
         .show()
     }
 
@@ -208,7 +219,6 @@ class NeoTermRemoteInterface : AppCompatActivity(), ServiceConnection {
       // In order to switch to it when entering NeoTermActivity
       NeoPreference.storeCurrentSession(session)
 
-      ////
       // All needed for clean start
       // ( also takes care of ghost sessions that happened before... )
       val intent = Intent(this, NeoTermActivity::class.java)

@@ -2,13 +2,11 @@ package com.offsec.nhterm.component.userscript
 
 import android.content.Context
 import android.system.Os
-import android.util.Log
 import com.offsec.nhterm.App
 import com.offsec.nhterm.component.NeoComponent
 import com.offsec.nhterm.component.config.NeoTermPath
 import com.offsec.nhterm.utils.NLog
 import com.offsec.nhterm.utils.extractAssetsDir
-import com.topjohnwu.superuser.Shell
 import java.io.File
 
 class UserScript(val scriptFile: File)
@@ -16,12 +14,9 @@ class UserScript(val scriptFile: File)
 class UserScriptComponent : NeoComponent {
   var userScripts = listOf<UserScript>()
   private val scriptDir = File(NeoTermPath.USER_SCRIPT_PATH)
-
   override fun onServiceInit() = checkForFiles()
-
   override fun onServiceDestroy() {
   }
-
   override fun onServiceObtained() = checkForFiles()
 
   private fun extractDefaultScript(context: Context) = kotlin.runCatching {
@@ -44,8 +39,8 @@ class UserScriptComponent : NeoComponent {
 
   private fun reloadScripts() {
     userScripts = scriptDir.listFiles()
-      .takeWhile { it.canExecute() }
-      .map { UserScript(it) }
-      .toList()
+      ?.filter { it.canExecute() }
+      ?.map { UserScript(it) }
+      ?: emptyList()
   }
 }

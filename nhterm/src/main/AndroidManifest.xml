@@ -9,6 +9,7 @@
     android:name="android.software.leanback"
     android:required="false"/>
 
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.VIBRATE" />
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -22,6 +23,7 @@
     tools:ignore="ProtectedPermissions" />
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
   <application
     android:name=".App"
@@ -44,31 +46,27 @@
       android:windowSoftInputMode="adjustResize|stateHidden"
       android:exported="true">
       <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.LAUNCHER"/>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
       <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
       </intent-filter>
-
       <meta-data
         android:name="android.app.shortcuts"
-        android:resource="@xml/app_shortcuts"/>
+        android:resource="@xml/app_shortcuts" />
     </activity>
-
     <activity-alias
       android:name=".NeoLotMainActivity"
       android:exported="true"
       android:targetActivity=".ui.term.NeoTermActivity">
       <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-
-        <category android:name="android.intent.category.IOT_LAUNCHER"/>
-        <category android:name="android.intent.category.DEFAULT"/>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.IOT_LAUNCHER" />
+        <category android:name="android.intent.category.DEFAULT" />
       </intent-filter>
     </activity-alias>
-
     <activity
       android:name=".ui.term.NeoTermRemoteInterface"
       android:configChanges="orientation|keyboardHidden"
@@ -76,58 +74,50 @@
       android:theme="@style/AppTheme"
       android:windowSoftInputMode="adjustResize|stateHidden">
       <intent-filter>
-        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.DEFAULT" />
       </intent-filter>
     </activity>
-
     <activity-alias
       android:name=".ui.term.TermHere"
       android:exported="true"
       android:label="@string/term_here"
       android:targetActivity=".ui.term.NeoTermRemoteInterface">
       <intent-filter>
-        <action android:name="android.intent.action.SEND"/>
-        <action android:name="android.intent.action.MAIN"/>
-
-        <data android:mimeType="*/*"/>
-        <category android:name="android.intent.category.DEFAULT"/>
+        <action android:name="android.intent.action.SEND" />
+        <action android:name="android.intent.action.MAIN" />
+        <data android:mimeType="*/*" />
+        <category android:name="android.intent.category.DEFAULT" />
       </intent-filter>
     </activity-alias>
-
     <activity-alias
       android:name=".ui.term.UserScript"
       android:exported="true"
       android:label="@string/user_script"
       android:targetActivity=".ui.term.NeoTermRemoteInterface">
       <intent-filter>
-        <action android:name="android.intent.action.SEND"/>
-        <action android:name="android.intent.action.SEND_MULTIPLE"/>
-        <action android:name="android.intent.action.MAIN"/>
-
-        <data android:mimeType="*/*"/>
+        <action android:name="android.intent.action.SEND" />
+        <action android:name="android.intent.action.SEND_MULTIPLE" />
+        <action android:name="android.intent.action.MAIN" />
+        <data android:mimeType="*/*" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+      <intent-filter>
+        <data android:scheme="file" />
+        <action android:name="android.intent.action.VIEW" />
+        <action android:name="android.intent.action.MAIN" />
+        <data android:mimeType="*/*" />
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
       <intent-filter>
-        <data android:scheme="file"/>
-
-        <action android:name="android.intent.action.VIEW"/>
-        <action android:name="android.intent.action.MAIN"/>
-
-        <data android:mimeType="*/*"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-      <intent-filter>
-        <action android:name="android.intent.action.VIEW"/>
-
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-
-        <data android:scheme="http"/>
-        <data android:scheme="https"/>
-        <data android:scheme="ftp"/>
-        <data android:mimeType="application/*"/>
-        <data android:mimeType="audio/*"/>
-        <data android:mimeType="video/*"/>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <data android:scheme="http" />
+        <data android:scheme="https" />
+        <data android:scheme="ftp" />
+        <data android:mimeType="application/*" />
+        <data android:mimeType="audio/*" />
+        <data android:mimeType="video/*" />
       </intent-filter>
     </activity-alias>
 
@@ -169,27 +159,22 @@
     <activity
       android:name=".ui.settings.SettingActivity"
       android:exported="false"
-      android:theme="@style/AppTheme"/>
-    <activity
-      android:name=".ui.settings.GeneralSettingsActivity"
-      android:exported="false"
-      android:theme="@style/AppTheme"/>
-    <activity
-      android:name=".ui.settings.UISettingsActivity"
-      android:exported="false"
-      android:theme="@style/AppTheme"/>
+      android:theme="@style/AppTheme.NoActionBar"/>
 
     <service
       android:name=".services.NeoTermService"
-      android:enabled="true"/>
-
+      android:enabled="true"
+      android:exported="false"
+      android:foregroundServiceType="specialUse">
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="terminal_emulator" />
+    </service>
     <meta-data
       android:name="com.sec.android.support.multiwindow"
-      android:value="true"/>
-
+      android:value="true" />
     <meta-data
       android:name="com.lge.support.SPLIT_WINDOW"
-      android:value="true"/>
+      android:value="true" />
   </application>
-
 </manifest>

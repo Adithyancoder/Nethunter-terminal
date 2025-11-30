@@ -1,21 +1,31 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+tasks.withType(JavaCompile).configureEach {
+  options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+  options.deprecation = true
+}
+
 buildscript {
-  ext.kotlin_version = '2.0.10'
+  ext.kotlin_version = '2.2.21'
   ext.android = [
-    KOTLIN_VERSION     : '2.0.10',
+    KOTLIN_VERSION     : '2.2.21',
     MIN_SDK_VERSION    : 21,
-    COMPILE_SDK_VERSION: 35,
-    TARGET_SDK_VERSION : 28,
-    JUNIT_VERSION      : "4.12"
+    COMPILE_SDK_VERSION: 36,
+    TARGET_SDK_VERSION : 34,
+    JUNIT_VERSION      : '5.0-SNAPSHOT'
   ]
 
   ext {
-    //version=YYYYMMVVRR (Either "VV" for stable version OR "RR" for pre-release candidate (e.g. 0001 for rc1))
+    //version=YYYY:MM:VV:RR (Either "VV" for stable version OR "RR" for pre-release candidate (e.g. 0001 for rc1))
     //noinspection HighAppVersionCode
     versionCode=2025040100
     versionName="2025.4"
   }
+
+  // Assign properties on ext using the explicit assignment syntax to avoid
+  // the deprecated Groovy DSL property call form inside the ext {} block.
+  ext.versionCode = 2025090001
+  ext.versionName = "2025.4-dev"
 
   ext.deps = [
     "annotations"         : "androidx.annotation:annotation:1.0.0",
@@ -28,39 +38,33 @@ buildscript {
   ]
 
   repositories {
-    maven { url "https://maven.fabric.io/public" }
-    maven { url 'https://plugins.gradle.org/m2/' }
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://artifactory.appodeal.com/appodeal-public/' }
-    maven { url 'https://dl.google.com/dl/android/maven2/' }
+    maven { url = "https://maven.fabric.io/public" }
+    maven { url = 'https://plugins.gradle.org/m2/' }
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://artifactory.appodeal.com/appodeal-public/' }
+    maven { url = 'https://dl.google.com/dl/android/maven2/' }
     mavenCentral()
     google()
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:8.9.2'
+    classpath 'com.android.tools.build:gradle:8.13.1'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath rootProject.ext.deps["kotlin-gradle-plugin"]
-
     classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
-    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
-
-    // NOTE: Do not place your application dependencies here; they belong
-    // in the individual module build.gradle files
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
   }
 }
 
 allprojects {
   repositories {
-    maven { url "https://repo.grails.org/grails/core" }
-    jcenter()
-    maven { url 'https://dl.google.com/dl/android/maven2/' }
+    maven { url = "https://repo.grails.org/grails/core" }
+    maven { url = 'https://dl.google.com/dl/android/maven2/' }
     mavenCentral()
-    maven { url "https://jitpack.io" }
+    maven { url = "https://jitpack.io" }
     google()
   }
 }
 
 tasks.register('clean', Delete) {
-  delete rootProject.buildDir
+  delete(rootProject.layout.buildDirectory.asFile)
 }

@@ -3,12 +3,12 @@ package com.offsec.nhterm.component.config
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import android.system.ErrnoException
 import android.system.Os
 import android.util.TypedValue
 import io.neolang.frontend.ConfigVisitor
-import io.neolang.frontend.NeoLangParser
+import com.offsec.neolang.frontend.NeoLangParser
 import com.offsec.nhterm.App
 import com.offsec.nhterm.R
 import com.offsec.nhterm.backend.TerminalSession
@@ -70,6 +70,7 @@ object NeoPreference {
   const val KEY_FONT_SIZE = "neoterm_general_font_size"
   private const val KEY_CURRENT_SESSION = "neoterm_service_current_session"
   const val KEY_SYSTEM_SHELL = "neoterm_core_system_shell"
+  @Suppress("unused")
   const val KEY_SOURCES = "neoterm_package_enabled_sources"
 
   const val VALUE_HAPPY_EGG_TRIGGER = 8
@@ -115,6 +116,7 @@ object NeoPreference {
     }
   }
 
+  @Suppress("unused")
   fun loadInt(key: Int, defaultValue: Int): Int {
     return loadInt(App.get().getString(key), defaultValue)
   }
@@ -153,11 +155,8 @@ object NeoPreference {
       .singleOrNull { it.mHandle == sessionHandle }
   }
 
-  private fun setLoginShellName(loginProgramName: String?): Boolean {
-    if (loginProgramName == null) {
-      return false
-    }
-
+  private fun setLoginShellName(): Boolean {
+    val loginProgramName = DefaultValues.LOGIN_SHELL
     val loginProgramPath = findLoginProgram(loginProgramName) ?: return false
 
     store(R.string.key_general_shell, loginProgramName)
@@ -166,7 +165,7 @@ object NeoPreference {
   }
 
   private fun getLoginShellName(): String {
-    return loadString(R.string.key_general_shell, DefaultValues.loginShell)
+    return loadString(R.string.key_general_shell, DefaultValues.LOGIN_SHELL)
   }
 
   fun getLoginShellPath(): String {
@@ -175,8 +174,8 @@ object NeoPreference {
     // Some programs like ssh needs it
     val shell = File(NeoTermPath.NEOTERM_LOGIN_SHELL_PATH)
     val loginProgramPath = findLoginProgram(loginProgramName) ?: run {
-      setLoginShellName(DefaultValues.loginShell)
-      "${NeoTermPath.USR_PATH}/bin/${DefaultValues.loginShell}"
+      setLoginShellName()
+      "${NeoTermPath.USR_PATH}/bin/${DefaultValues.LOGIN_SHELL}"
     }
 
     if (!shell.exists()) {
@@ -213,21 +212,21 @@ object NeoPreference {
   fun getFontSize(): Int {
     return loadInt(
       KEY_FONT_SIZE,
-      DefaultValues.fontSize,
+      DefaultValues.FONT_SIZE,
     )
   }
 
   fun getInitialCommand(): String {
     return loadString(
       R.string.key_general_initial_command,
-      DefaultValues.initialCommand,
+      DefaultValues.INITIAL_COMMAND,
     )
   }
 
   fun isBellEnabled(): Boolean {
     return loadBoolean(
       R.string.key_general_bell,
-      DefaultValues.enableBell,
+      false,
     )
   }
 

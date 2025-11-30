@@ -16,16 +16,21 @@ final class ByteQueue {
 
   public synchronized void close() {
     mOpen = false;
-    notify();
+    notifyAll();
   }
 
   public synchronized int read(byte[] buffer, boolean block) {
     while (mStoredBytes == 0 && mOpen) {
       if (block) {
         try {
-          wait();
+          wait(30000);
+          // Check if we timed out
+          if (mStoredBytes == 0 && mOpen) {
+            return 0;
+          }
         } catch (InterruptedException e) {
-          // Ignore.
+          Thread.currentThread().interrupt();
+          return -1;
         }
       } else {
         return 0;
@@ -49,7 +54,7 @@ final class ByteQueue {
       offset += bytesToCopy;
       totalRead += bytesToCopy;
     }
-    if (wasFull) notify();
+    if (wasFull) notifyAll();
     return totalRead;
   }
 
@@ -71,9 +76,14 @@ final class ByteQueue {
       while (lengthToWrite > 0) {
         while (bufferLength == mStoredBytes && mOpen) {
           try {
-            wait();
+            wait(30000);
+            // Check if we timed out
+            if (bufferLength == mStoredBytes && mOpen) {
+              return false;
+            }
           } catch (InterruptedException e) {
-            // Ignore.
+            Thread.currentThread().interrupt();
+            return false;
           }
         }
         if (!mOpen) return false;
@@ -102,7 +112,7 @@ final class ByteQueue {
           bytesToWriteBeforeWaiting -= bytesToCopy;
           mStoredBytes += bytesToCopy;
         }
-        if (wasEmpty) notify();
+        if (wasEmpty) notifyAll();
       }
     }
     return true;

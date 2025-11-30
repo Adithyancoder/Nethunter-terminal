@@ -17,40 +17,36 @@ import java.util.Stack;
  * <p>
  * References:
  * <ul>
- * <li>http://invisible-island.net/xterm/ctlseqs/ctlseqs.html</li>
- * <li>http://en.wikipedia.org/wiki/ANSI_escape_code</li>
- * <li>http://man.he.net/man4/console_codes</li>
- * <li>http://bazaar.launchpad.net/~leonerd/libvterm/trunk/view/head:/src/state.c</li>
- * <li>http://www.columbia.edu/~kermit/k95manual/iso2022.html</li>
- * <li>http://www.vt100.net/docs/vt510-rm/chapter4</li>
- * <li>http://en.wikipedia.org/wiki/ISO/IEC_2022 - for 7-bit and 8-bit GL GR explanation</li>
- * <li>http://bjh21.me.uk/all-escapes/all-escapes.txt - extensive!</li>
- * <li>http://woldlab.caltech.edu/~diane/kde4.10/workingdir/kubuntu/konsole/doc/developer/old-documents/VT100/techref.
+ * <li><a href="https://invisible-island.net/xterm/ctlseqs/ctlseqs.html">...</a></li>
+ * <li>https://en.wikipedia.org/wiki/ANSI_escape_code</li>
+ * <li>https://man.he.net/man4/console_codes</li>
+ * <li>https://bazaar.launchpad.net/~leonerd/libvterm/trunk/view/head:/src/state.c</li>
+ * <li>https://www.columbia.edu/~kermit/k95manual/iso2022.html</li>
+ * <li>https://www.vt100.net/docs/vt510-rm/chapter4</li>
+ * <li>https://en.wikipedia.org/wiki/ISO/IEC_2022 - for 7-bit and 8-bit GL GR explanation</li>
+ * <li>https://bjh21.me.uk/all-escapes/all-escapes.txt - extensive!</li>
+ * <li>https://woldlab.caltech.edu/~diane/kde4.10/workingdir/kubuntu/konsole/doc/developer/old-documents/VT100/techref.
  * html - document for konsole - accessible!</li>
  * </ul>
  */
 public final class TerminalEmulator {
-
   /**
    * Log unknown or unimplemented escape sequences received from the shell process.
    */
   private static final boolean LOG_ESCAPE_SEQUENCES = false;
-
   public static final int MOUSE_LEFT_BUTTON = 0;
-
   /**
    * Mouse moving while having left mouse button pressed.
    */
   public static final int MOUSE_LEFT_BUTTON_MOVED = 32;
   public static final int MOUSE_WHEELUP_BUTTON = 64;
   public static final int MOUSE_WHEELDOWN_BUTTON = 65;
-
   public static final int CURSOR_STYLE_BLOCK = 0;
   public static final int CURSOR_STYLE_UNDERLINE = 1;
   public static final int CURSOR_STYLE_BAR = 2;
 
   /**
-   * Used for invalid data - https://en.wikipedia.org/wiki/Replacement_character#Replacement_character
+   * Used for invalid data - <a href="https://en.wikipedia.org/wiki/Replacement_character#Replacement_character">...</a>
    */
   public static final int UNICODE_REPLACEMENT_CHAR = 0xFFFD;
 
@@ -130,24 +126,21 @@ public final class TerminalEmulator {
    * Escape processing: CSI !
    */
   private static final int ESC_CSI_EXCLAMATION = 19;
-
   /**
    * The number of parameter arguments. This name comes from the ANSI standard for terminal escape codes.
    */
   private static final int MAX_ESCAPE_PARAMETERS = 16;
-
   /**
    * Needs to be large enough to contain reasonable OSC 52 pastes.
    */
   private static final int MAX_OSC_STRING_LENGTH = 8192;
-
   /**
    * DECSET 1 - application cursorColor keys.
    */
   private static final int DECSET_BIT_APPLICATION_CURSOR_KEYS = 1;
   private static final int DECSET_BIT_REVERSE_VIDEO = 1 << 1;
   /**
-   * http://www.vt100.net/docs/vt510-rm/DECOM: "When DECOM is set, the home cursorColor position is at the upper-left
+   * <a href="http://www.vt100.net/docs/vt510-rm/DECOM">...</a>: "When DECOM is set, the home cursorColor position is at the upper-left
    * corner of the screen, within the margins. The starting point for line numbers depends on the current top margin
    * setting. The cursorColor cannot move outside of the margins. When DECOM is reset, the home cursorColor position is at the
    * upper-left corner of the screen. The starting point for line numbers is independent of the margins. The cursorColor
@@ -155,7 +148,7 @@ public final class TerminalEmulator {
    */
   private static final int DECSET_BIT_ORIGIN_MODE = 1 << 2;
   /**
-   * http://www.vt100.net/docs/vt510-rm/DECAWM: "If the DECAWM function is set, then graphic characters received when
+   * <a href="http://www.vt100.net/docs/vt510-rm/DECAWM">...</a>: "If the DECAWM function is set, then graphic characters received when
    * the cursorColor is at the right border of the page appear at the beginning of the next line. Any text on the page
    * scrolls up if the cursorColor is at the end of the scrolling region. If the DECAWM function is reset, then graphic
    * characters received when the cursorColor is at the right border of the page replace characters already on the page."
@@ -187,11 +180,11 @@ public final class TerminalEmulator {
    */
   private static final int DECSET_BIT_BRACKETED_PASTE_MODE = 1 << 10;
   /**
-   * Toggled with DECLRMM - http://www.vt100.net/docs/vt510-rm/DECLRMM
+   * Toggled with DECLRMM - <a href="http://www.vt100.net/docs/vt510-rm/DECLRMM">...</a>
    */
   private static final int DECSET_BIT_LEFTRIGHT_MARGIN_MODE = 1 << 11;
   /**
-   * Not really DECSET bit... - http://www.vt100.net/docs/vt510-rm/DECSACE
+   * Not really DECSET bit... - <a href="http://www.vt100.net/docs/vt510-rm/DECSACE">...</a>
    */
   private static final int DECSET_BIT_RECTANGULAR_CHANGEATTRIBUTE = 1 << 12;
 
@@ -228,19 +221,17 @@ public final class TerminalEmulator {
    * The alternate screen buffer, exactly as large as the display and contains no additional saved lines (so that when
    * the alternate screen buffer is active, you cannot scroll back to view saved lines).
    * <p>
-   * See http://www.xfree86.org/current/ctlseqs.html#The%20Alternate%20Screen%20Buffer
+   * See <a href="http://www.xfree86.org/current/ctlseqs.html#The%20Alternate%20Screen%20Buffer">...</a>
    */
   final TerminalBuffer mAltBuffer;
   /**
    * The current screen buffer, pointing at either {@link #mMainBuffer} or {@link #mAltBuffer}.
    */
   private TerminalBuffer mScreen;
-
   /**
    * The terminal session this emulator is bound to.
    */
   private final TerminalOutput mSession;
-
   /**
    * Keeps track of the current argument of the current escape sequence. Ranges from 0 to MAX_ESCAPE_PARAMETERS-1.
    */
@@ -249,53 +240,43 @@ public final class TerminalEmulator {
    * Holds the arguments of the current escape sequence.
    */
   private final int[] mArgs = new int[MAX_ESCAPE_PARAMETERS];
-
   /**
    * Holds OSC and device control arguments, which can be strings.
    */
   private final StringBuilder mOSCOrDeviceControlArgs = new StringBuilder();
-
   /**
    * True if the current escape sequence should continue, false if the current escape sequence should be terminated.
    * Used when parsing a single character.
    */
   private boolean mContinueSequence;
-
   /**
    * The current state of the escape sequence state machine. One of the ESC_* constants.
    */
   private int mEscapeState;
-
   private final SavedScreenState mSavedStateMain = new SavedScreenState();
   private final SavedScreenState mSavedStateAlt = new SavedScreenState();
-
   /**
-   * http://www.vt100.net/docs/vt102-ug/table5-15.html
+   * <a href="http://www.vt100.net/docs/vt102-ug/table5-15.html">...</a>
    */
   private boolean mUseLineDrawingG0, mUseLineDrawingG1, mUseLineDrawingUsesG0 = true;
-
   /**
    * @see TerminalEmulator#mapDecSetBitToInternalBit(int)
    */
   private int mCurrentDecSetFlags, mSavedDecSetFlags;
-
   /**
    * If insert mode (as opposed to replace mode) is active. In insert mode new characters are inserted, pushing
    * existing text to the right. Characters moved past the right margin are lost.
    */
   private boolean mInsertMode;
-
   /**
    * An array of menu_main stops. mTabStop[i] is true if there is a menu_main stop set for column i.
    */
   private boolean[] mTabStop;
-
   /**
    * Top margin of screen for scrolling ranges from 0 to mRows-2. Bottom margin ranges from mTopMargin + 2 to mRows
    * (Defines the first row after the scrolling region). Left/right margin in [0, mColumns].
    */
   private int mTopMargin, mBottomMargin, mLeftMargin, mRightMargin;
-
   /**
    * If the next character to be emitted will be automatically wrapped to the next line. Used to disambiguate the case
    * where the cursorColor is positioned on the last column (mColumns-1). When standing there, a written character will be
@@ -303,7 +284,6 @@ public final class TerminalEmulator {
    * this will move to the next line.
    */
   private boolean mAboutToAutoWrap;
-
   /**
    * Current foregroundColor and backgroundColor colors. Can either be a color index in [0,259] or a truecolor (24-bit) value.
    * For a 24-bit value the top byte (0xff000000) is set.
@@ -311,24 +291,19 @@ public final class TerminalEmulator {
    * @see TextStyle
    */
   int mForeColor, mBackColor;
-
   /**
    * Current {@link TextStyle} effect.
    */
   private int mEffect;
-
   /**
    * The number of scrolled lines since last calling {@link #clearScrollCounter()}. Used for moving selection up along
    * with the scrolling text.
    */
   private int mScrollCounter = 0;
-
   private byte mUtf8ToFollow, mUtf8Index;
   private final byte[] mUtf8InputBuffer = new byte[4];
   private int mLastEmittedCodePoint = -1;
-
   public final TerminalColors mColors = new TerminalColors();
-
   private boolean isDecsetInternalBitSet(int bit) {
     return (mCurrentDecSetFlags & bit) != 0;
   }
@@ -350,35 +325,22 @@ public final class TerminalEmulator {
   }
 
   static int mapDecSetBitToInternalBit(int decsetBit) {
-    switch (decsetBit) {
-      case 1:
-        return DECSET_BIT_APPLICATION_CURSOR_KEYS;
-      case 5:
-        return DECSET_BIT_REVERSE_VIDEO;
-      case 6:
-        return DECSET_BIT_ORIGIN_MODE;
-      case 7:
-        return DECSET_BIT_AUTOWRAP;
-      case 25:
-        return DECSET_BIT_SHOWING_CURSOR;
-      case 66:
-        return DECSET_BIT_APPLICATION_KEYPAD;
-      case 69:
-        return DECSET_BIT_LEFTRIGHT_MARGIN_MODE;
-      case 1000:
-        return DECSET_BIT_MOUSE_TRACKING_PRESS_RELEASE;
-      case 1002:
-        return DECSET_BIT_MOUSE_TRACKING_BUTTON_EVENT;
-      case 1004:
-        return DECSET_BIT_SEND_FOCUS_EVENTS;
-      case 1006:
-        return DECSET_BIT_MOUSE_PROTOCOL_SGR;
-      case 2004:
-        return DECSET_BIT_BRACKETED_PASTE_MODE;
-      default:
-        return -1;
+    return switch (decsetBit) {
+      case 1 -> DECSET_BIT_APPLICATION_CURSOR_KEYS;
+      case 5 -> DECSET_BIT_REVERSE_VIDEO;
+      case 6 -> DECSET_BIT_ORIGIN_MODE;
+      case 7 -> DECSET_BIT_AUTOWRAP;
+      case 25 -> DECSET_BIT_SHOWING_CURSOR;
+      case 66 -> DECSET_BIT_APPLICATION_KEYPAD;
+      case 69 -> DECSET_BIT_LEFTRIGHT_MARGIN_MODE;
+      case 1000 -> DECSET_BIT_MOUSE_TRACKING_PRESS_RELEASE;
+      case 1002 -> DECSET_BIT_MOUSE_TRACKING_BUTTON_EVENT;
+      case 1004 -> DECSET_BIT_SEND_FOCUS_EVENTS;
+      case 1006 -> DECSET_BIT_MOUSE_PROTOCOL_SGR;
+      case 2004 -> DECSET_BIT_BRACKETED_PASTE_MODE;
+      default -> -1;
       // throw new IllegalArgumentException("Unsupported decset: " + decsetBit);
-    }
+    };
   }
 
   public TerminalEmulator(TerminalOutput session, int columns, int rows, int transcriptRows) {
@@ -542,11 +504,10 @@ public final class TerminalEmulator {
             // "It is not possible to use a C1 control obtained from decoding the
             // UTF-8 text" - http://invisible-island.net/xterm/ctlseqs/ctlseqs.htm
           } else {
-            switch (Character.getType(codePoint)) {
-              case Character.UNASSIGNED:
-              case Character.SURROGATE:
-                codePoint = UNICODE_REPLACEMENT_CHAR;
-            }
+            codePoint = switch (Character.getType(codePoint)) {
+              case Character.UNASSIGNED, Character.SURROGATE -> UNICODE_REPLACEMENT_CHAR;
+              default -> codePoint;
+            };
             processCodePoint(codePoint);
           }
         }
@@ -978,21 +939,13 @@ public final class TerminalEmulator {
               transBuffer.append(c);
             }
             String trans = transBuffer.toString();
-            String responseValue;
-            switch (trans) {
-              case "Co":
-              case "colors":
-                responseValue = "256"; // Number of colors.
-                break;
-              case "TN":
-              case "name":
-                responseValue = "xterm";
-                break;
-              default:
-                responseValue = KeyHandler.getCodeFromTermcap(trans, isDecsetInternalBitSet(DECSET_BIT_APPLICATION_CURSOR_KEYS),
+            String responseValue = switch (trans) {
+              case "Co", "colors" -> "256"; // Number of colors.
+              case "TN", "name" -> "xterm";
+              default ->
+                KeyHandler.getCodeFromTermcap(trans, isDecsetInternalBitSet(DECSET_BIT_APPLICATION_CURSOR_KEYS),
                   isDecsetInternalBitSet(DECSET_BIT_APPLICATION_KEYPAD));
-                break;
-            }
+            };
             if (responseValue == null) {
               switch (trans) {
                 case "%1": // Help key - ignore
@@ -1430,7 +1383,7 @@ public final class TerminalEmulator {
   }
 
   /**
-   * DECSC save cursorColor - http://www.vt100.net/docs/vt510-rm/DECSC . See {@link #restoreCursor()}.
+   * DECSC save cursorColor - <a href="http://www.vt100.net/docs/vt510-rm/DECSC">...</a> . See {@link #restoreCursor()}.
    */
   private void saveCursor() {
     SavedScreenState state = (mScreen == mMainBuffer) ? mSavedStateMain : mSavedStateAlt;
@@ -1446,7 +1399,7 @@ public final class TerminalEmulator {
   }
 
   /**
-   * DECRS restore cursorColor - http://www.vt100.net/docs/vt510-rm/DECRC. See {@link #saveCursor()}.
+   * DECRS restore cursorColor - <a href="http://www.vt100.net/docs/vt510-rm/DECRC">...</a>. See {@link #saveCursor()}.
    */
   private void restoreCursor() {
     SavedScreenState state = (mScreen == mMainBuffer) ? mSavedStateMain : mSavedStateAlt;
@@ -1784,7 +1737,7 @@ public final class TerminalEmulator {
   }
 
   /**
-   * Select Graphic Rendition (SGR) - see http://en.wikipedia.org/wiki/ANSI_escape_code#graphics.
+   * Select Graphic Rendition (SGR) - see <a href="https://en.wikipedia.org/wiki/ANSI_escape_code#graphics">...</a>.
    */
   private void selectGraphicRendition() {
     if (mArgIndex >= mArgs.length) mArgIndex = mArgs.length - 1;
@@ -2129,7 +2082,7 @@ public final class TerminalEmulator {
 
   /**
    * Process the next ASCII character of a parameter.
-   *
+   * <p>
    * Parameter characters modify the action or interpretation of the sequence. You can use up to
    * 16 parameters per sequence. You must use the ; character to separate parameters.
    * All parameters are unsigned, positive decimal integers, with the most significant
@@ -2137,8 +2090,8 @@ public final class TerminalEmulator {
    * (decimal). If you do not specify a value, a 0 value is assumed. A 0 value
    * or omitted parameter indicates a default value for the sequence. For most
    * sequences, the default value is 1.
-   *
-   * https://vt100.net/docs/vt510-rm/chapter4.html#S4.3.3
+   * <p>
+   * <a href="https://vt100.net/docs/vt510-rm/chapter4.html#S4.3.3">...</a>
    */
   private void parseArg(int inputByte) {
     int[] bytes = getInts(inputByte);
@@ -2519,7 +2472,7 @@ public final class TerminalEmulator {
   }
 
   /**
-   * http://www.vt100.net/docs/vt510-rm/DECSC
+   * <a href="https://www.vt100.net/docs/vt510-rm/DECSC">...</a>
    */
   static final class SavedScreenState {
     /**

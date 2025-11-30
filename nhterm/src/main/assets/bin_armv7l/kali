@@ -1,11 +1,35 @@
 #!/data/data/com.offsec.nhterm/files/usr/bin_armv7l/bash
-# Version: 1.0.2
+# Version: 1.0.4
 
 # export path for android bins/tools
 export PATH=/data/data/com.offsec.nhterm/files/home/.nhterm/script:/data/data/com.offsec.nhterm/files/usr/bin_armv7l:/data/data/com.offsec.nhterm/files/usr/sbin:/sbin:/system/bin:/system/xbin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/odm/bin:/vendor/bin:/product/bin:.
 
+##
+# Find and identify su solution
+# As different solutions have and use different args :(
+##
+
 SU1=$(which su)
-SU2="$SU1 -c $@"
+
+M_SU="$SU1 -i -mm -c $*"
+K_SU="$SU1 -M -p -c $*"
+U_SU="$SU1 $*"
+
+# try obvious flags first
+for f in --version -v -V --help; do
+  o="$("$SU1" $f 2>/dev/null || true)"
+  case "$o" in
+    *MagiskSU* ) export SU2="${M_SU}";;
+    *SuperSU*|*superuser*|*Chainfire* ) export SU2="${U_SU}";;
+    *busybox* ) export SU2="${U_SU}";;
+    *toybox* ) export SU2="${U_SU}";;
+    *KernelSU* ) export SU2="${K_SU}";;
+  esac
+done
+
+##
+# Finally do the main script job
+##
 
 # clear out old view
 clear
@@ -32,5 +56,5 @@ export SHLVL=1
 # Lets pass a binky export here too ;)
 export YOU_KNOW_WHAT=THIS_IS_KALI_LINUX_NETHUNTER_FROM_JAVA_BINKY
 
-$SU2 /system/bin/chroot /data/local/nhsystem/kalifs su
+$SU2 /system/bin/chroot /data/local/nhsystem/kalifs /bin/su
 

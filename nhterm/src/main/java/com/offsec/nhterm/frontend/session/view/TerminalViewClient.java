@@ -22,25 +22,14 @@ public interface TerminalViewClient {
    * On a single tap on the terminal if terminal mouse reporting not enabled.
    */
   void onSingleTapUp(MotionEvent e);
-
   boolean shouldBackButtonBeMappedToEscape();
-
   void copyModeChanged(boolean copyMode);
-
   boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session);
-
   boolean onKeyUp(int keyCode, KeyEvent e);
-
   boolean readControlKey();
-
   boolean readAltKey();
-
   boolean readShiftKey();
-
   boolean readFnKey();
-
   boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session);
-
   boolean onLongPress(MotionEvent event);
-
 }

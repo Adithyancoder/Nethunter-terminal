@@ -7,8 +7,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.offsec.nhterm.App
 import com.offsec.nhterm.R
@@ -19,15 +20,11 @@ import com.offsec.nhterm.utils.getPathOfMediaUri
 import com.offsec.nhterm.utils.runApt
 import java.io.File
 
-
 /**
  * @author kiva
  */
 class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener {
-  companion object {
-    private const val REQUEST_SELECT_PARAMETER = 520;
-  }
-
+  private lateinit var selectParameterLauncher: ActivityResultLauncher<Intent>
   private var setupParameter = ""
   private var setupParameterUri: Uri? = null
 
@@ -40,6 +37,17 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.ui_setup)
+
+    // Register the launcher for selecting a parameter
+    selectParameterLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode == RESULT_OK) {
+        val data = result.data
+        if (data != null) {
+          val path = this.getPathOfMediaUri(data.data)
+          findViewById<EditText>(R.id.setup_source_parameter).setText(path)
+        }
+      }
+    }
 
     val parameterEditor = findViewById<EditText>(R.id.setup_source_parameter)
 
@@ -73,17 +81,6 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
       R.id.setup_source_parameter_select -> doSelectParameter()
       R.id.setup_next -> doPrepareSetup()
     }
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
-    if (requestCode == REQUEST_SELECT_PARAMETER && resultCode == RESULT_OK) {
-      if (resultData != null) {
-        val path = this.getPathOfMediaUri(resultData.data)
-        findViewById<EditText>(R.id.setup_source_parameter).setText(path)
-        return
-      }
-    }
-    super.onActivityResult(requestCode, resultCode, resultData)
   }
 
   private fun doPrepareSetup() {
@@ -128,11 +125,8 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "*/*"
         try {
-          startActivityForResult(
-            Intent.createChooser(intent, getString(R.string.setup_local)),
-            REQUEST_SELECT_PARAMETER
-          )
-        } catch (ignore: ActivityNotFoundException) {
+          selectParameterLauncher.launch(Intent.createChooser(intent, getString(R.string.setup_local)))
+        } catch (_: ActivityNotFoundException) {
           Toast.makeText(this, R.string.no_file_picker, Toast.LENGTH_SHORT).show()
         }
       }
@@ -146,12 +140,12 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
         MaterialAlertDialogBuilder(this, R.style.DialogStyle)
           .setTitle(R.string.new_source)
           .setView(view)
-          .setPositiveButton(android.R.string.yes) { _, _ ->
+          .setPositiveButton(android.R.string.ok) { _, _ ->
             val newURL = edit.text.toString()
             val parameterEditor = findViewById<EditText>(R.id.setup_source_parameter)
             parameterEditor.setText(newURL)
           }
-          .setNegativeButton(android.R.string.no, null)
+          .setNegativeButton(android.R.string.cancel, null)
           .show()
       }
     }
@@ -171,7 +165,7 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
       R.id.setup_method_online -> try {
         java.net.URI.create(parameter)
         null
-      } catch (e: IllegalArgumentException) {
+      } catch (_: IllegalArgumentException) {
         getString(R.string.setup_error_invalid_url)
       }
       R.id.setup_method_local,
@@ -196,10 +190,10 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
     MaterialAlertDialogBuilder(this, R.style.DialogStyle)
       .setTitle(titleId)
       .setMessage(messageId)
-      .setPositiveButton(android.R.string.yes) { _, _ ->
+      .setPositiveButton(android.R.string.ok) { _, _ ->
         doSetup(connection)
       }
-      .setNegativeButton(android.R.string.no, null)
+      .setNegativeButton(android.R.string.cancel, null)
       .show()
   }
 
@@ -224,7 +218,7 @@ class SetupActivity : AppCompatActivity(), View.OnClickListener, ResultListener 
         .setNeutralButton(R.string.show_help) { _, _ ->
           App.get().openHelpLink()
         }
-        .setPositiveButton(android.R.string.yes, null)
+        .setPositiveButton(android.R.string.ok, null)
         .show()
     }
   }

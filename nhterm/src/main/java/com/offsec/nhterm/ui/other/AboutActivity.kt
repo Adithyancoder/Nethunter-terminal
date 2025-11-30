@@ -31,7 +31,6 @@ import java.io.InputStreamReader
 import androidx.core.net.toUri
 import com.offsec.nhterm.component.nethunter.NethunterComponent
 
-
 /**
  * @author kiva
  */
@@ -176,7 +175,7 @@ class AboutActivity : AppCompatActivity() {
           resetApp(this)
           resetisdone()
         }
-        .setNegativeButton(android.R.string.no, null)
+        .setNegativeButton(android.R.string.cancel, null)
         .show()
     }
   }

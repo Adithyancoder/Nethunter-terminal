@@ -36,7 +36,7 @@ class TermViewClient(val context: Context) :
   var termSessionData: TermSessionData? = null
 
   override fun onScale(scale: Float): Float {
-    if (scale < 0.9f || scale > 1.1f) {
+    if (scale !in 0.9f..1.1f) {
       val increase = scale > 1f
       changeFontSize(increase)
       return 1.0f

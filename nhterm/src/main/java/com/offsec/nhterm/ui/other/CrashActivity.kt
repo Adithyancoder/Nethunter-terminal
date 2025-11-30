@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.pm.PackageInfoCompat
 import com.offsec.nhterm.R
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -23,14 +24,20 @@ class CrashActivity : AppCompatActivity() {
   }
 
   private fun collectExceptionInfo(): String {
-    val extra = intent.getSerializableExtra("exception")
-    if (extra != null && extra is Throwable) {
+    val extraThrowable: Throwable? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      intent.getSerializableExtra("exception", Throwable::class.java)
+    } else {
+      @Suppress("DEPRECATION")
+      intent.getSerializableExtra("exception") as? Throwable
+    }
+
+    if (extraThrowable != null) {
+      val throwable = extraThrowable.cause ?: extraThrowable
       val byteArrayOutput = ByteArrayOutputStream()
-      val printStream = PrintStream(byteArrayOutput)
-      (extra.cause ?: extra).printStackTrace(printStream)
-      return byteArrayOutput.use {
-        byteArrayOutput.toString("utf-8")
+      PrintStream(byteArrayOutput).use { printStream ->
+        throwable.printStackTrace(printStream)
       }
+      return byteArrayOutput.toString("utf-8")
     }
     return "are.you.kidding.me.NoExceptionFoundException: This is a bug, please contact developers!"
   }
@@ -38,7 +45,8 @@ class CrashActivity : AppCompatActivity() {
   private fun collectAppInfo(): String {
     val pm = packageManager
     val info = pm.getPackageInfo(packageName, 0)
-    return "${info.versionName} (${info.versionCode})"
+    val longVersion = PackageInfoCompat.getLongVersionCode(info)
+    return "${info.versionName} (${longVersion})"
   }
 
   private fun collectModelInfo(): String {

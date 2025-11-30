@@ -21,7 +21,6 @@ object NethunterComponent {
     val appgid = Os.getgid()
     val binDir = File(NeoTermPath.BIN_PATH + "_$sysarch")
 
-
     Log.d("NETHUNTER_INIT", "--- Start of NH init ---")
 
     // Cleanup old binaries

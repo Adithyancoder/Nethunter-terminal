@@ -30,7 +30,7 @@ class FontComponent : NeoComponent {
   }
 
   fun getCurrentFontName(): String {
-    val defaultFont = DefaultValues.defaultFont
+    val defaultFont = DefaultValues.DEFAULT_FONT
     var currentFontName = NeoPreference.loadString(R.string.key_customization_font, defaultFont)
     if (!fonts.containsKey(currentFontName)) {
       currentFontName = defaultFont
@@ -61,7 +61,7 @@ class FontComponent : NeoComponent {
       fonts[fontName] = font
     }
 
-    val defaultFont = DefaultValues.defaultFont
+    val defaultFont = DefaultValues.DEFAULT_FONT
     if (fonts.containsKey(defaultFont)) {
       DEFAULT_FONT = fonts[defaultFont]!!
       return true
@@ -81,7 +81,7 @@ class FontComponent : NeoComponent {
   }
 
   private fun loadDefaultFontFromAsset(context: Context): NeoFont {
-    val defaultFont = DefaultValues.defaultFont
+    val defaultFont = DefaultValues.DEFAULT_FONT
     return NeoFont(Typeface.createFromAsset(context.assets, "fonts/$defaultFont.ttf"))
   }
 
@@ -89,17 +89,17 @@ class FontComponent : NeoComponent {
     try {
       context.extractAssetsDir( "fonts", NeoTermPath.FONT_PATH)
       return true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       return false
     }
   }
 
-  private fun fontFile(fontName: String): File {
-    return File("${NeoTermPath.FONT_PATH}/$fontName.ttf")
-  }
-
   private fun fontName(fontFile: File): String {
     return fontFile.nameWithoutExtension
+  }
+
+  private fun getDefaultFontFile(): File {
+    return File("${NeoTermPath.FONT_PATH}/${DefaultValues.DEFAULT_FONT}.ttf")
   }
 
   private fun checkForFiles() {
@@ -107,8 +107,8 @@ class FontComponent : NeoComponent {
     fonts = mutableMapOf()
 
     val context = App.get()
-    val defaultFont = DefaultValues.defaultFont
-    val defaultFontFile = fontFile(defaultFont)
+    val defaultFont = DefaultValues.DEFAULT_FONT
+    val defaultFontFile = getDefaultFontFile()
 
     if (!defaultFontFile.exists()) {
       if (!extractDefaultFont(context)) {

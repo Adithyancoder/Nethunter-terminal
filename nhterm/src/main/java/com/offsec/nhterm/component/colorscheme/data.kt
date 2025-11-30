@@ -177,8 +177,6 @@ object DefaultColorScheme : NeoColorScheme() {
   init {
     /* NOTE: Keep in sync with assets/colors/Default.nl */
     colorName = "Kali"
-
-
     cursorColor = "#a9aaa9"
   }
 }

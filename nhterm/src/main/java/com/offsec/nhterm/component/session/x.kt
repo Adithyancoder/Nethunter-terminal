@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+
 package com.offsec.nhterm.component.session
 
 import android.app.UiModeManager
@@ -20,11 +22,25 @@ import com.offsec.nhterm.xorg.NeoXorgViewClient
 import com.offsec.nhterm.xorg.R
 import java.util.*
 
+/*
+  * This file should be rewritten to avoid deprecated APIs.
+  * However, some parts (e.g., KeyboardView) have no modern replacements yet.
+  * Suppressing deprecation warnings for the entire file for now.
+ */
+private fun Context.getThemeColor(attr: Int): Int {
+  val ta = theme.obtainStyledAttributes(intArrayOf(attr))
+  try {
+    return ta.getColor(0, 0)
+  } finally {
+    ta.recycle()
+  }
+}
+
 class XParameter
 
 class XSession constructor(private val mActivity: AppCompatActivity, val mSessionData: XSessionData) :
   NeoXorgViewClient {
-  var mSessionName = "";
+  var mSessionName = ""
 
   init {
     if (Globals.InhibitSuspend) {
@@ -76,8 +92,9 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
       mSessionData.keyboardWithoutTextInputShown = true
       runOnUiThread(Runnable {
         if (keyboard == 0) {
-          inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
-          inputManager.showSoftInput(glView, InputMethodManager.SHOW_FORCED)
+          // SHOW_FORCED and toggleSoftInput are deprecated; request focus and explicitly show IME
+          glView?.requestFocus()
+          inputManager.showSoftInput(glView, InputMethodManager.SHOW_IMPLICIT)
           window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         } else {
           if (mSessionData.screenKeyboard != null)
@@ -86,8 +103,10 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
           val builtinKeyboard = BuiltInKeyboardView(mActivity, null)
           builtinKeyboard.alpha = 0.7f
           builtinKeyboard.changeKeyboard(keyboard)
-          builtinKeyboard.setOnKeyboardActionListener(object : KeyboardView.OnKeyboardActionListener {
+          @Suppress("DEPRECATION")
+          builtinKeyboard.setOnKeyboardActionListener(@Suppress("DEPRECATION") object : KeyboardView.OnKeyboardActionListener {
             @Deprecated("Deprecated in Java")
+            @Suppress("DEPRECATION")
             override fun onPress(key: Int) {
               var key = key
               if (key == KeyEvent.KEYCODE_BACK)
@@ -109,9 +128,11 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
             }
 
             @Deprecated("Deprecated in Java")
+            @Suppress("DEPRECATION")
             override fun onRelease(key: Int) {
               var key = key
               if (key == KeyEvent.KEYCODE_BACK) {
+                @Suppress("DEPRECATION")
                 builtinKeyboard.setOnKeyboardActionListener(null)
                 showScreenKeyboardWithoutTextInputField(0) // Hide keyboard
                 return
@@ -182,20 +203,26 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
             }
 
             @Deprecated("Deprecated in Java")
+            @Suppress("DEPRECATION")
             override fun onText(p1: CharSequence) {}
 
+            @Suppress("DEPRECATION")
             @Deprecated("Deprecated in Java")
             override fun swipeLeft() {}
 
+            @Suppress("DEPRECATION")
             @Deprecated("Deprecated in Java")
             override fun swipeRight() {}
 
+            @Suppress("DEPRECATION")
             @Deprecated("Deprecated in Java")
             override fun swipeDown() {}
 
+            @Suppress("DEPRECATION")
             @Deprecated("Deprecated in Java")
             override fun swipeUp() {}
 
+            @Suppress("DEPRECATION")
             @Deprecated("Deprecated in Java")
             override fun onKey(p1: Int, p2: IntArray) {}
           })
@@ -244,9 +271,7 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
 
     val screenKeyboard = EditText(
       mActivity, null,
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-        android.R.style.TextAppearance_Material_Widget_EditText
-      else android.R.style.TextAppearance_Widget_EditText
+      android.R.style.TextAppearance_Material_Widget_EditText
     )
 
     val hint = mSessionData.screenKeyboardHintMessage
@@ -254,8 +279,11 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
     screenKeyboard.setText(oldText)
     screenKeyboard.setSelection(screenKeyboard.text.length)
     screenKeyboard.setOnKeyListener(SimpleKeyListener(this))
-    screenKeyboard.setBackgroundColor(mActivity.resources.getColor(android.R.color.primary_text_light))
-    screenKeyboard.setTextColor(mActivity.resources.getColor(android.R.color.background_light))
+    // Prefer theme attributes over deprecated android.R.color.* constants
+    val bgColor = mActivity.getThemeColor(android.R.attr.colorBackground)
+    val textColor = mActivity.getThemeColor(android.R.attr.textColorPrimary)
+    screenKeyboard.setBackgroundColor(bgColor)
+    screenKeyboard.setTextColor(textColor)
 
     if (isRunningOnOUYA && Globals.TvBorders)
       screenKeyboard.setPadding(100, 100, 100, 100) // Bad bad HDMI TVs all have cropped borders
@@ -306,7 +334,7 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
     synchronized(mSessionData.textInput) {
       val text = (mSessionData.screenKeyboard as EditText).text.toString()
       for (i in text.indices) {
-        NeoRenderer.callNativeTextInput(text[i].toInt(), text.codePointAt(i))
+        NeoRenderer.callNativeTextInput(text[i].code, text.codePointAt(i))
       }
     }
     NeoRenderer.callNativeTextInputFinished()
@@ -319,7 +347,14 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
   }
 
   override fun updateScreenOrientation() {
-    val rotation: Int = windowManager.defaultDisplay.rotation
+    val rotation: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      // Activity.getDisplay() is available on API 30+; use it when possible
+      mActivity.display?.rotation ?: Surface.ROTATION_0
+    } else {
+      @Suppress("DEPRECATION")
+      windowManager.defaultDisplay.rotation
+    }
+
     NeoAccelerometerReader.setGyroInvertedOrientation(
       rotation == Surface.ROTATION_180 || rotation == Surface.ROTATION_270
     )
@@ -327,13 +362,7 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
 
   override fun initScreenOrientation() {
     Globals.AutoDetectOrientation = true
-    if (Globals.AutoDetectOrientation) {
-      mActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-      return
-    }
-    mActivity.requestedOrientation =
-      if (Globals.HorizontalOrientation) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-      else ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+    mActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
   }
 
   override fun isRunningOnOUYA(): Boolean {
@@ -348,17 +377,16 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
   }
 
   override fun setSystemMousePointerVisible(visible: Int) {
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
       glView?.pointerIcon = PointerIcon.getSystemIcon(
         mActivity,
         if (visible == 0) PointerIcon.TYPE_NULL
-        else PointerIcon.TYPE_DEFAULT
+        else PointerIcon.TYPE_ARROW
       )
     }
   }
 
   class SimpleKeyListener(private var client: NeoXorgViewClient) : View.OnKeyListener {
-
     override fun onKey(v: View, keyCode: Int, event: KeyEvent): Boolean {
       if (event.action == KeyEvent.ACTION_UP && (keyCode == KeyEvent.KEYCODE_ENTER ||
           keyCode == KeyEvent.KEYCODE_BACK ||
@@ -379,6 +407,7 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
     }
   }
 
+  @Suppress("DEPRECATION")
   class BuiltInKeyboardView(context: Context, attrs: android.util.AttributeSet?) : KeyboardView(context, attrs) {
     var shift = false
     var alt = false
@@ -406,7 +435,10 @@ class XSession constructor(private val mActivity: AppCompatActivity, val mSessio
 
     fun changeKeyboard(keyboardIndex: Int) {
       val idx = (if (shift) 1 else 0) + if (alt) 2 else 0
-      val keyboard = Keyboard(context, NeoTextInput.TextInputKeyboardList[idx][keyboardIndex])
+      // Use XmlResourceParser overload to avoid deprecated Keyboard(Context, int) constructor
+      val resId = NeoTextInput.TextInputKeyboardList[idx][keyboardIndex]
+      // Use the Context-based ctor (deprecated) - this class is suppressed for deprecation warnings
+      val keyboard = Keyboard(context, resId)
       isPreviewEnabled = false
       isProximityCorrectionEnabled = false
       for (k in keyboard.keys) {
@@ -424,10 +456,8 @@ class XSessionData {
   var audioThread: NeoAudioThread? = null
   var screenKeyboard: View? = null
   var glView: NeoGLView? = null
-
   var isPaused = false
   var client: NeoXorgViewClient? = null
-
   var keyboardWithoutTextInputShown = false
   var screenKeyboardHintMessage: String? = null
   var textInput = LinkedList<Int>()

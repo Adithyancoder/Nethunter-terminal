@@ -36,5 +36,4 @@ public abstract class TerminalOutput {
   public abstract void onBell();
 
   public abstract void onColorsChanged();
-
 }

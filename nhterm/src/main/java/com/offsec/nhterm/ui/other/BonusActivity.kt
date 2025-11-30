@@ -3,6 +3,7 @@ package com.offsec.nhterm.ui.other
 import android.animation.ObjectAnimator
 import android.content.res.ColorStateList
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.Path
@@ -13,11 +14,17 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.*
+import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.offsec.nhterm.R
+import kotlin.random.Random
 
 /**
  * @author kiva
@@ -28,6 +35,11 @@ class BonusActivity : AppCompatActivity() {
   private var mTapCount: Int = 0
   private var mKeyCount: Int = 0
   private var mInterpolator = PathInterpolator(0f, 0f, 0.5f, 1f)
+  private val NAMES = listOf(
+    "Martin Välba", "yesimxev", "Kimocoder",
+    "V0lk3n", "Hemal", "Robin",
+    "B1NKYB3AR", "jcadduono", "Mister X"
+  )
 
   private fun makeRipple(): Drawable {
     val idx = newColorIndex()
@@ -42,11 +54,15 @@ class BonusActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     mLayout = FrameLayout(this)
-    window.setFlags(
-      WindowManager.LayoutParams.FLAG_FULLSCREEN,
-      WindowManager.LayoutParams.FLAG_FULLSCREEN
-    )
     setContentView(mLayout)
+
+    // Make activity fullscreen (hide status and navigation bars) using WindowInsets API
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    val controller = WindowInsetsControllerCompat(window, mLayout)
+    controller.hide(
+      WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars()
+    )
+    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
   }
 
   override fun onAttachedToWindow() {
@@ -54,8 +70,13 @@ class BonusActivity : AppCompatActivity() {
     val dp = dm.density
     val size = (dm.widthPixels.coerceAtMost(dm.heightPixels).toFloat().coerceAtMost(600 * dp) - 100 * dp).toInt()
     val stick = object : View(this) {
-      internal var mPaint = Paint()
-      internal var mShadow = Path()
+      var mPaint = Paint()
+      var mShadow = Path()
+      // Preallocate gradient drawable and colors to avoid allocations in onDraw
+      private val gradient = GradientDrawable().apply {
+        orientation = GradientDrawable.Orientation.LEFT_RIGHT
+        colors = intArrayOf(0xFFFFFFFF.toInt(), 0xFFAAAAAA.toInt())
+      }
 
       public override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -71,12 +92,10 @@ class BonusActivity : AppCompatActivity() {
         val w = width
         val h = height / 2
         c.translate(0f, h.toFloat())
-        val g = GradientDrawable()
-        g.orientation = GradientDrawable.Orientation.LEFT_RIGHT
-        g.setGradientCenter(w * 0.75f, 0f)
-        g.colors = intArrayOf(0xFFFFFFFF.toInt(), 0xFFAAAAAA.toInt())
-        g.setBounds(0, 0, w, h)
-        g.draw(c)
+        // Update pre-allocated gradient for current size/center and draw
+        gradient.setGradientCenter(w * 0.75f, 0f)
+        gradient.setBounds(0, 0, w, h)
+        gradient.draw(c)
         mPaint.color = 0xFFAAAAAA.toInt()
         mShadow.reset()
         mShadow.moveTo(0f, 0f)
@@ -99,8 +118,8 @@ class BonusActivity : AppCompatActivity() {
     im.translationZ = 20f
     im.scaleX = 0f
     im.scaleY = 0f
-    val platlogo = getDrawable(R.drawable.ic_kali_logo)
-    platlogo!!.alpha = 0
+    val platlogo = androidx.appcompat.content.res.AppCompatResources.getDrawable(this, R.drawable.ic_kali_logo)
+    platlogo?.alpha = 0
     im.setImageDrawable(platlogo)
     im.background = makeRipple()
     im.isClickable = true
@@ -122,10 +141,12 @@ class BonusActivity : AppCompatActivity() {
           .setStartDelay(500)
           .start()
 
-        val a = ObjectAnimator.ofInt(platlogo, "alpha", 0, 255)
-        a.interpolator = mInterpolator
-        a.startDelay = 1000
-        a.start()
+        platlogo?.let { d ->
+          val a = ObjectAnimator.ofInt(d, "alpha", 0, 255)
+          a.interpolator = mInterpolator
+          a.startDelay = 1000
+          a.start()
+        }
 
         stick.animate()
           .translationZ(20f)
@@ -139,11 +160,17 @@ class BonusActivity : AppCompatActivity() {
       }
       mTapCount++
     }
+    im.setOnLongClickListener {
+      if (mTapCount > 5) {
+        startSnowFall()
+      }
+      true
+    }
 
     // Enable hardware keyboard input for TV compatibility.
     im.isFocusable = true
     im.requestFocus()
-    im.setOnKeyListener { v, keyCode, event ->
+    im.setOnKeyListener { _, keyCode, event ->
       if (keyCode != KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
         ++mKeyCount
         if (mKeyCount > 2) {
@@ -167,6 +194,31 @@ class BonusActivity : AppCompatActivity() {
       .setStartDelay(800)
       .start()
   }
+
+  private fun startSnowFall() {
+    val container = mLayout
+    for (name in NAMES) {
+      val nameView = TextView(this)
+      nameView.text = name
+      nameView.setTextColor(Color.WHITE)
+      nameView.textSize = 20f
+      val params = FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.WRAP_CONTENT,
+        FrameLayout.LayoutParams.WRAP_CONTENT
+      )
+      nameView.x = Random.nextFloat() * container.width
+      container.addView(nameView, params)
+
+      val animator = ObjectAnimator.ofFloat(nameView, "translationY", -200f, container.height.toFloat()).apply {
+        interpolator = LinearInterpolator()
+        duration = Random.nextLong(4000, 8000)
+        startDelay = Random.nextLong(0, 6000)
+        repeatCount = ObjectAnimator.INFINITE
+      }
+      animator.start()
+    }
+  }
+
 
   companion object {
     internal val FLAVORS = intArrayOf(

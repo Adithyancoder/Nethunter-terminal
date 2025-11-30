@@ -1,12 +1,13 @@
 package com.offsec.nhterm.framework.database;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * @author kiva
  */
 public class NeoTermSQLiteConfig implements Serializable {
-
+  @Serial
   private static final long serialVersionUID = -4069725570156436316L;
   //==============================================================
   //                          常量

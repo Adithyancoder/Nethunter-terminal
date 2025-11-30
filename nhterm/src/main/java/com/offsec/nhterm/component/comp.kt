@@ -33,6 +33,7 @@ object ComponentManager {
     component.onServiceInit()
   }
 
+  @Suppress("unused")
   fun unregisterComponent(componentInterface: Class<out NeoComponent>) {
     val component = COMPONENTS[componentInterface]
     if (component != null) {
@@ -41,7 +42,7 @@ object ComponentManager {
     }
   }
 
-  @Suppress("UNCHECKED_CAST")
+  @Suppress("UNCHECKED_CAST", "UNUSED_PARAMETER")
   fun <T : NeoComponent> getComponent(componentInterface: Class<T>, errorThrow: Boolean = true): T {
     val component: NeoComponent =
       COMPONENTS[componentInterface] ?: throw ComponentNotFoundException(componentInterface.simpleName)
@@ -52,11 +53,17 @@ object ComponentManager {
 
   inline fun <reified T : NeoComponent> getComponent(): T {
     val componentInterface = T::class.java
-    return getComponent(componentInterface);
+    return getComponent(componentInterface)
   }
 
   private fun createServiceInstance(componentInterface: Class<out NeoComponent>): NeoComponent {
-    return componentInterface.newInstance()
+    try {
+      val ctor = componentInterface.getDeclaredConstructor()
+      if (!ctor.isAccessible) ctor.isAccessible = true
+      return ctor.newInstance() as NeoComponent
+    } catch (e: Exception) {
+      throw RuntimeException("Unable to create component instance for ${componentInterface.simpleName}", e)
+    }
   }
 }
 

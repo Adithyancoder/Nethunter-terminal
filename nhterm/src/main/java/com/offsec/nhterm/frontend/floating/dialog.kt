@@ -9,7 +9,7 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.offsec.nhterm.R
 import com.offsec.nhterm.backend.TerminalSession
-import com.offsec.nhterm.component.config.DefaultValues.initialCommand
+import com.offsec.nhterm.component.config.DefaultValues.INITIAL_COMMAND
 import com.offsec.nhterm.component.session.ShellParameter
 import com.offsec.nhterm.component.session.ShellTermSession
 import com.offsec.nhterm.frontend.session.terminal.BasicSessionCallback

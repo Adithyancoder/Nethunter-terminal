@@ -29,11 +29,11 @@ final class TerminalRenderer {
    */
   final float mFontWidth;
   /**
-   * The {@link Paint#getFontSpacing()}. See https://www.fampennings.nl/maarten/android/08numgrid/font.png
+   * The {@link Paint#getFontSpacing()}. See <a href="https://www.fampennings.nl/maarten/android/08numgrid/font.png">...</a>
    */
   final int mFontLineSpacing;
   /**
-   * The {@link Paint#ascent()}. See https://www.fampennings.nl/maarten/android/08numgrid/font.png
+   * The {@link Paint#ascent()}. See <a href="https://www.fampennings.nl/maarten/android/08numgrid/font.png">...</a>
    */
   private final int mFontAscent;
   /**

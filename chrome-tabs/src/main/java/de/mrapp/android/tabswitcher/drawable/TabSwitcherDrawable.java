@@ -27,6 +27,8 @@ import de.mrapp.android.util.ThemeUtil;
 import static de.mrapp.android.util.Condition.ensureAtLeast;
 import static de.mrapp.android.util.Condition.ensureNotNull;
 
+import java.util.Objects;
+
 /**
  * A drawable, which allows to display the number of tabs, which are currently contained by a {@link
  * TabSwitcher}. It must be registered at a {@link TabSwitcher} instance in order to keep the
@@ -84,7 +86,7 @@ public class TabSwitcherDrawable extends Drawable implements TabSwitcherListener
     textSizeSmall =
       resources.getDimensionPixelSize(R.dimen.tab_switcher_drawable_font_size_small);
     background =
-      ContextCompat.getDrawable(context, R.drawable.tab_switcher_drawable_background)
+      Objects.requireNonNull(ContextCompat.getDrawable(context, R.drawable.tab_switcher_drawable_background))
         .mutate();
     paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     paint.setColor(Color.WHITE);
@@ -93,7 +95,7 @@ public class TabSwitcherDrawable extends Drawable implements TabSwitcherListener
     paint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
     label = Integer.toString(0);
     int tint = ThemeUtil.getColor(context, android.R.attr.textColorPrimary);
-    setColorFilter(tint, PorterDuff.Mode.MULTIPLY);
+    setColorFilter(new PorterDuffColorFilter(tint, PorterDuff.Mode.MULTIPLY));
   }
 
   /**
@@ -118,8 +120,8 @@ public class TabSwitcherDrawable extends Drawable implements TabSwitcherListener
 
   @Override
   public final void draw(@NonNull final Canvas canvas) {
-    int width = canvas.getWidth();
-    int height = canvas.getHeight();
+    int width = getBounds().width();
+    int height = getBounds().height();
     int intrinsicWidth = background.getIntrinsicWidth();
     int intrinsicHeight = background.getIntrinsicHeight();
     int left = (width / 2) - (intrinsicWidth / 2);
@@ -154,6 +156,7 @@ public class TabSwitcherDrawable extends Drawable implements TabSwitcherListener
     paint.setColorFilter(colorFilter);
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public final int getOpacity() {
     return PixelFormat.TRANSLUCENT;
@@ -194,5 +197,4 @@ public class TabSwitcherDrawable extends Drawable implements TabSwitcherListener
                                      @NonNull final Animation animation) {
     setCount(tabSwitcher.getCount());
   }
-
 }

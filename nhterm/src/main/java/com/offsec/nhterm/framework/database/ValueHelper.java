@@ -1,7 +1,6 @@
 package com.offsec.nhterm.framework.database;
 
 import android.database.Cursor;
-
 import java.lang.reflect.Field;
 
 /**
@@ -72,19 +71,35 @@ public class ValueHelper {
     switch (dataType) {
       case INTEGER:
         Object f = field.get(o);
-        if (f instanceof Boolean) {
-          return String.valueOf(((boolean) field.get(o)) ? 1 : 0);
-        } else {
-          return String.valueOf((int) field.get(o));
+        if (f == null) {
+          return "NULL";
         }
+        if (f instanceof Boolean) {
+          return ((Boolean) f) ? "1" : "0";
+        }
+        if (f instanceof Number) {
+          return String.valueOf(((Number) f).intValue());
+        }
+        return String.valueOf(f);
       case TEXT:
-        return "\"" + field.get(o) + "\"";
+        Object ft = field.get(o);
+        if (ft == null) return "NULL";
+        return "\"" + ft.toString() + "\"";
       case DOUBLE:
-        return String.valueOf((double) field.get(o));
+        Object fd = field.get(o);
+        if (fd == null) return "NULL";
+        if (fd instanceof Number) return String.valueOf(((Number) fd).doubleValue());
+        return fd.toString();
       case FLOAT:
-        return String.valueOf((float) field.get(o));
+        Object ff = field.get(o);
+        if (ff == null) return "NULL";
+        if (ff instanceof Number) return String.valueOf(((Number) ff).floatValue());
+        return ff.toString();
       case BIGINT:
-        return String.valueOf((long) field.get(o));
+        Object fl = field.get(o);
+        if (fl == null) return "NULL";
+        if (fl instanceof Number) return String.valueOf(((Number) fl).longValue());
+        return fl.toString();
     }
     return null;
   }
@@ -99,19 +114,28 @@ public class ValueHelper {
   public static String valueToString(DatabaseDataType dataType, Object o) {
     switch (dataType) {
       case INTEGER:
+        if (o == null) return "NULL";
         if (o instanceof Boolean) {
-          return ((boolean) o) ? "1" : "0";
-        } else {
-          return String.valueOf((int) o);
+          return ((Boolean) o) ? "1" : "0";
         }
+        if (o instanceof Number) {
+          return String.valueOf(((Number) o).intValue());
+        }
+        return String.valueOf(o);
       case TEXT:
-        return "\"" + o + "\"";
+        return (o == null) ? "NULL" : "\"" + o + "\"";
       case DOUBLE:
-        return String.valueOf((double) o);
+        if (o == null) return "NULL";
+        if (o instanceof Number) return String.valueOf(((Number) o).doubleValue());
+        return o.toString();
       case FLOAT:
-        return String.valueOf((float) o);
+        if (o == null) return "NULL";
+        if (o instanceof Number) return String.valueOf(((Number) o).floatValue());
+        return o.toString();
       case BIGINT:
-        return String.valueOf((long) o);
+        if (o == null) return "NULL";
+        if (o instanceof Number) return String.valueOf(((Number) o).longValue());
+        return o.toString();
     }
     return null;
   }

@@ -12,7 +12,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.MenuItemCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.github.wrdlbrnft.sortedlistadapter.SortedListAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -55,11 +54,11 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
         MaterialAlertDialogBuilder(this@PackageManagerActivity, R.style.DialogStyle)
           .setTitle(model.packageInfo.packageName)
           .setMessage(model.getPackageDetails(this@PackageManagerActivity))
-          .setPositiveButton(R.string.install) { _, _ ->
-            installPackage(model.packageInfo.packageName)
-          }
-          .setNegativeButton(android.R.string.no, null)
-          .show()
+        .setPositiveButton(R.string.install) { _, _ ->
+          installPackage(model.packageInfo.packageName)
+        }
+        .setNegativeButton(android.R.string.cancel, null)
+        .show()
       }
     })
     adapter.addCallback(this)
@@ -79,7 +78,7 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
     menuInflater.inflate(R.menu.menu_pm, menu)
     val searchItem = menu!!.findItem(R.id.action_search)
-    val searchView = MenuItemCompat.getActionView(searchItem) as SearchView
+    val searchView = searchItem.actionView as SearchView
     searchView.setOnQueryTextListener(this)
     return true
   }
@@ -106,9 +105,9 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
       .setMultiChoiceItems(items, selection) { _, which, isChecked ->
         sourceList[which].enabled = isChecked
       }
-      .setPositiveButton(android.R.string.yes) { _, _ -> changeSourceInternal(sourceManager, sourceList) }
+      .setPositiveButton(android.R.string.ok) { _, _ -> changeSourceInternal(sourceManager, sourceList) }
       .setNeutralButton(R.string.new_source) { _, _ -> changeSourceToUserInput(sourceManager) }
-      .setNegativeButton(android.R.string.no, null)
+      .setNegativeButton(android.R.string.cancel, null)
       .show()
   }
 
@@ -125,8 +124,8 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
     MaterialAlertDialogBuilder(this, R.style.DialogStyle)
       .setTitle(R.string.pref_package_source)
       .setView(view)
-      .setNegativeButton(android.R.string.no, null)
-      .setPositiveButton(android.R.string.yes) { _, _ ->
+      .setNegativeButton(android.R.string.cancel, null)
+      .setPositiveButton(android.R.string.ok) { _, _ ->
         val url = urlEditor.text.toString()
         val repo = repoEditor.text.toString()
         var errored = false
@@ -156,7 +155,11 @@ class PackageManagerActivity : AppCompatActivity(), SearchView.OnQueryTextListen
   private fun postChangeSource(sourceManager: SourceManager) {
     sourceManager.applyChanges()
     NeoPreference.store(R.string.key_package_source, sourceManager.getMainPackageSource())
-    SourceHelper.syncSource(sourceManager)
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      SourceHelper.syncSource(sourceManager)
+    } else {
+      // Older Android versions: skip syncSource (not available) and rely on update/refresh
+    }
     executeAptUpdate()
   }
 

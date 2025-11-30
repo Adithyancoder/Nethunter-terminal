@@ -88,7 +88,6 @@ class ShellParameter {
 class ShellProfile : NeoProfile() {
   companion object {
     const val PROFILE_META_NAME = "profile-shell"
-
     private const val LOGIN_SHELL = "login-shell"
     private const val INITIAL_COMMAND = "init-command"
     private const val BELL = "bell"
@@ -108,18 +107,15 @@ class ShellProfile : NeoProfile() {
   }
 
   override val profileMetaName = PROFILE_META_NAME
-
-  var loginShell = DefaultValues.loginShell
-  var initialCommand = DefaultValues.initialCommand
-
-  var enableBell = DefaultValues.enableBell
+  var loginShell = DefaultValues.LOGIN_SHELL
+  var initialCommand = DefaultValues.INITIAL_COMMAND
+  var enableBell = false
   private var enableExecveWrapper = DefaultValues.enableExecveWrapper
   var enableSpecialVolumeKeys = DefaultValues.enableSpecialVolumeKeys
   private var enableAutoCompletion = DefaultValues.enableAutoCompletion
   var enableBackKeyToEscape = DefaultValues.enableBackButtonBeMappedToEscape
   var enableExtraKeys = DefaultValues.enableExtraKeys
   var enableWordBasedIme = DefaultValues.enableWordBasedIme
-
   private var profileFont: String
   private var profileColorScheme: String
 
@@ -129,7 +125,6 @@ class ShellProfile : NeoProfile() {
 
     profileFont = fontComp.getCurrentFontName()
     profileColorScheme = colorComp.getCurrentColorSchemeName()
-
     loginShell = NeoPreference.getLoginShellPath()
     initialCommand = NeoPreference.getInitialCommand()
     enableBell = NeoPreference.isBellEnabled()

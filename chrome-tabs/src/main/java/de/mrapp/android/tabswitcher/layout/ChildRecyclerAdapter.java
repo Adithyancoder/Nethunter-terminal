@@ -123,12 +123,17 @@ public class ChildRecyclerAdapter extends AbstractViewRecycler.Adapter<Tab, Void
     outState.putSparseParcelableArray(SAVED_INSTANCE_STATES_EXTRA, savedInstanceStates);
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public final void restoreInstanceState(@Nullable final Bundle savedInstanceState) {
     if (savedInstanceState != null) {
-      savedInstanceStates =
-        savedInstanceState.getSparseParcelableArray(SAVED_INSTANCE_STATES_EXTRA);
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        savedInstanceStates =
+          savedInstanceState.getSparseParcelableArray(SAVED_INSTANCE_STATES_EXTRA, Bundle.class);
+      } else {
+        savedInstanceStates =
+          savedInstanceState.getSparseParcelableArray(SAVED_INSTANCE_STATES_EXTRA);
+      }
     }
   }
-
 }

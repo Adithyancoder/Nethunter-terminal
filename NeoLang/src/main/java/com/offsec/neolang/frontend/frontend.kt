@@ -1,4 +1,17 @@
-package io.neolang.frontend
+package com.offsec.neolang.frontend
+
+import io.neolang.frontend.NeoLangArrayNode
+import io.neolang.frontend.NeoLangAst
+import io.neolang.frontend.NeoLangAttributeNode
+import io.neolang.frontend.NeoLangBlockNode
+import io.neolang.frontend.NeoLangEOFToken
+import io.neolang.frontend.NeoLangGroupNode
+import io.neolang.frontend.NeoLangNumberNode
+import io.neolang.frontend.NeoLangProgramNode
+import io.neolang.frontend.NeoLangStringNode
+import io.neolang.frontend.NeoLangToken
+import io.neolang.frontend.NeoLangTokenType
+import io.neolang.frontend.NeoLangTokenValue
 
 /**
  * @author kiva
@@ -69,40 +82,40 @@ class NeoLangLexer {
         return NeoLangEOFToken()
       }
 
-      val currentToken = NeoLangTokenValue.wrap(currentChar.toString())
+      val currentToken = NeoLangTokenValue.Companion.wrap(currentChar.toString())
       val token: NeoLangToken = when (currentToken) {
-        NeoLangTokenValue.COLON -> {
+        NeoLangTokenValue.Companion.COLON -> {
           moveToNextChar(eofThrow = true)
           NeoLangToken(NeoLangTokenType.COLON, currentToken)
         }
-        NeoLangTokenValue.BRACKET_START -> {
+        NeoLangTokenValue.Companion.BRACKET_START -> {
           moveToNextChar(eofThrow = true)
           NeoLangToken(NeoLangTokenType.BRACKET_START, currentToken)
         }
-        NeoLangTokenValue.BRACKET_END -> {
+        NeoLangTokenValue.Companion.BRACKET_END -> {
           moveToNextChar()
           NeoLangToken(NeoLangTokenType.BRACKET_END, currentToken)
         }
-        NeoLangTokenValue.ARRAY_START -> {
+        NeoLangTokenValue.Companion.ARRAY_START -> {
           moveToNextChar()
           NeoLangToken(NeoLangTokenType.ARRAY_START, currentToken)
         }
-        NeoLangTokenValue.ARRAY_END -> {
+        NeoLangTokenValue.Companion.ARRAY_END -> {
           moveToNextChar()
           NeoLangToken(NeoLangTokenType.ARRAY_END, currentToken)
         }
-        NeoLangTokenValue.COMMA -> {
+        NeoLangTokenValue.Companion.COMMA -> {
           moveToNextChar(eofThrow = true)
           NeoLangToken(NeoLangTokenType.COMMA, currentToken)
         }
-        NeoLangTokenValue.QUOTE -> {
-          NeoLangToken(NeoLangTokenType.STRING, NeoLangTokenValue.wrap(getNextTokenAsString()))
+        NeoLangTokenValue.Companion.QUOTE -> {
+          NeoLangToken(NeoLangTokenType.STRING, NeoLangTokenValue.Companion.wrap(getNextTokenAsString()))
         }
         else -> {
           if (currentChar.isNumber()) {
-            NeoLangToken(NeoLangTokenType.NUMBER, NeoLangTokenValue.wrap(getNextTokenAsNumber()))
+            NeoLangToken(NeoLangTokenType.NUMBER, NeoLangTokenValue.Companion.wrap(getNextTokenAsNumber()))
           } else if (isIdentifier(currentChar, true)) {
-            NeoLangToken(NeoLangTokenType.ID, NeoLangTokenValue.wrap(getNextTokenAsId()))
+            NeoLangToken(NeoLangTokenType.ID, NeoLangTokenValue.Companion.wrap(getNextTokenAsId()))
           } else {
             throw InvalidTokenException("Unexpected character near line $lineNumber: $currentChar")
           }
@@ -120,7 +133,7 @@ class NeoLangLexer {
     val builder = StringBuilder()
 
     var loop = true
-    while (loop && currentChar != NeoLangTokenValue.QUOTE.value.asString()[0]) {
+    while (loop && currentChar != NeoLangTokenValue.Companion.QUOTE.value.asString()[0]) {
       // NeoLang does not support escaped char
 //            if (currentChar == '\\') {
 //                builder.append('\\')
@@ -136,7 +149,7 @@ class NeoLangLexer {
   }
 
   private fun getNextTokenAsNumber(): String {
-    var numberValue: Double = (currentChar.toInt() - '0'.toInt()).toDouble()
+    var numberValue: Double = (currentChar.code - '0'.code).toDouble()
 
     // Four types of numbers are supported:
     // Dec(123) Hex(0x123) Oct(017) Bin(0b11)
@@ -187,7 +200,7 @@ class NeoLangLexer {
     var value = numberValue
     var loop = moveToNextChar() // skip 'x' or 'X'
     while (loop && (currentChar.isHexNumber())) {
-      value *= 16 + (currentChar.toInt().and(15)) + if (currentChar >= 'A') 9 else 0
+      value *= 16 + (currentChar.code and 15) + if (currentChar >= 'A') 9 else 0
       loop = moveToNextChar()
     }
     return value
@@ -240,7 +253,7 @@ class NeoLangLexer {
 
   private fun Char.toNumber(): Int {
     return if (isNumber()) {
-      this.toInt() - '0'.toInt()
+      this.code - '0'.code
     } else 0
   }
 
@@ -275,7 +288,7 @@ class NeoLangParser {
   private fun updateParserStatus(tokens: List<NeoLangToken>): NeoLangAst? {
     if (tokens.isEmpty()) {
       // Allow empty program
-      return NeoLangProgramNode.emptyNode()
+      return NeoLangProgramNode.Companion.emptyNode()
     }
 
     this.tokens.clear()
@@ -291,7 +304,7 @@ class NeoLangParser {
     if (currentToken.tokenType === tokenType) {
       currentPosition++
       if (currentPosition >= tokens.size) {
-        this.currentToken = NeoLangToken(NeoLangTokenType.EOF, NeoLangTokenValue.EOF)
+        this.currentToken = NeoLangToken(NeoLangTokenType.EOF, NeoLangTokenValue.Companion.EOF)
       } else {
         this.currentToken = tokens[currentPosition]
       }
@@ -324,7 +337,7 @@ class NeoLangParser {
       return NeoLangProgramNode(groups)
     }
 
-    return NeoLangProgramNode.emptyNode()
+    return NeoLangProgramNode.Companion.emptyNode()
   }
 
   /**
@@ -360,7 +373,7 @@ class NeoLangParser {
 
       val attrName = NeoLangStringNode(token)
 
-      val block = block(attrName) ?: NeoLangBlockNode.emptyNode()
+      val block = block(attrName) ?: NeoLangBlockNode.Companion.emptyNode()
       return NeoLangAttributeNode(attrName, block)
     }
     return null
@@ -418,7 +431,7 @@ class NeoLangParser {
         match(NeoLangTokenType.ARRAY_END, errorThrow = true)
 
         // Allow empty arrays
-        return if (array != null) NeoLangBlockNode(array) else NeoLangBlockNode.emptyNode()
+        return if (array != null) NeoLangBlockNode(array) else NeoLangBlockNode.Companion.emptyNode()
       }
 
       else -> throw InvalidTokenException("Unexpected token `${token.tokenValue}' typed `${token.tokenType}' for block")
@@ -450,7 +463,7 @@ class NeoLangParser {
         match(NeoLangTokenType.BRACKET_END, errorThrow = true)
 
         // Allow empty blocks
-        return if (group != null) NeoLangBlockNode(group) else NeoLangBlockNode.emptyNode()
+        return if (group != null) NeoLangBlockNode(group) else NeoLangBlockNode.Companion.emptyNode()
       }
       else -> null
     }

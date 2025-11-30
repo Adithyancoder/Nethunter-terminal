@@ -40,7 +40,6 @@ import static de.mrapp.android.util.Condition.ensureNotNull;
  * @since 0.1.0
  */
 public class Tab implements Parcelable {
-
   /**
    * A creator, which allows to create instances of the class {@link Tab} from parcels.
    */
@@ -63,7 +62,6 @@ public class Tab implements Parcelable {
    * changed, must implement.
    */
   public interface Callback {
-
     /**
      * The method, which is invoked, when the tab's title has been changed.
      *
@@ -112,7 +110,6 @@ public class Tab implements Parcelable {
      *            null
      */
     void onTitleTextColorChanged(@NonNull Tab tab);
-
   }
 
   /**
@@ -226,15 +223,32 @@ public class Tab implements Parcelable {
    * @param source The parcel, the tab should be created from, as an instance of the class {@link
    *               Parcel}. The parcel may not be null
    */
+  @SuppressWarnings("deprecation")
   protected Tab(@NonNull final Parcel source) {
     this.title = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(source);
     this.iconId = source.readInt();
-    this.iconBitmap = source.readParcelable(getClass().getClassLoader());
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      this.iconBitmap = source.readParcelable(getClass().getClassLoader(), Bitmap.class);
+    } else {
+      this.iconBitmap = source.readParcelable(getClass().getClassLoader());
+    }
     this.closeable = source.readInt() > 0;
     this.closeButtonIconId = source.readInt();
-    this.closeButtonIconBitmap = source.readParcelable(getClass().getClassLoader());
-    this.backgroundColor = source.readParcelable(getClass().getClassLoader());
-    this.titleTextColor = source.readParcelable(getClass().getClassLoader());
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      this.closeButtonIconBitmap = source.readParcelable(getClass().getClassLoader(), Bitmap.class);
+    } else {
+      this.closeButtonIconBitmap = source.readParcelable(getClass().getClassLoader());
+    }
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      this.backgroundColor = source.readParcelable(getClass().getClassLoader(), ColorStateList.class);
+    } else {
+      this.backgroundColor = source.readParcelable(getClass().getClassLoader());
+    }
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      this.titleTextColor = source.readParcelable(getClass().getClassLoader(), ColorStateList.class);
+    } else {
+      this.titleTextColor = source.readParcelable(getClass().getClassLoader());
+    }
     this.parameters = source.readBundle(getClass().getClassLoader());
   }
 
@@ -538,5 +552,4 @@ public class Tab implements Parcelable {
     parcel.writeParcelable(titleTextColor, flags);
     parcel.writeBundle(parameters);
   }
-
 }

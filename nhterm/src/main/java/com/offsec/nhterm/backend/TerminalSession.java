@@ -1,7 +1,7 @@
 package com.offsec.nhterm.backend;
 
-import android.annotation.SuppressLint;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.system.ErrnoException;
 import android.system.Os;
@@ -31,17 +31,11 @@ public class TerminalSession extends TerminalOutput {
    */
   public interface SessionChangedCallback {
     void onTextChanged(TerminalSession changedSession);
-
     void onTitleChanged(TerminalSession changedSession);
-
     void onSessionFinished(TerminalSession finishedSession);
-
     void onClipboardText(TerminalSession session, String text);
-
     void onBell(TerminalSession session);
-
     void onColorsChanged(TerminalSession session);
-
   }
 
   @SuppressWarnings("JavaReflectionMemberAccess")
@@ -66,9 +60,7 @@ public class TerminalSession extends TerminalOutput {
 
   private static final int MSG_NEW_INPUT = 1;
   private static final int MSG_PROCESS_EXITED = 4;
-
   public final String mHandle = UUID.randomUUID().toString();
-
   private TerminalEmulator mEmulator;
 
   /**
@@ -116,8 +108,7 @@ public class TerminalSession extends TerminalOutput {
    */
   public String mSessionName;
 
-  @SuppressLint("HandlerLeak")
-  private final Handler mMainThreadHandler = new Handler() {
+  private final Handler mMainThreadHandler = new Handler(Looper.getMainLooper()) {
     final byte[] mReceiveBuffer = new byte[4 * 1024];
 
     @Override
@@ -354,24 +345,19 @@ public class TerminalSession extends TerminalOutput {
   public synchronized int getExitStatus() {
     return mShellExitStatus;
   }
-
   @Override
   public void clipboardText(String text) {
     mChangeCallback.onClipboardText(this, text);
   }
-
   @Override
   public void onBell() {
     mChangeCallback.onBell(this);
   }
-
   @Override
   public void onColorsChanged() {
     mChangeCallback.onColorsChanged(this);
   }
-
   public int getPid() {
     return mShellPid;
   }
-
 }

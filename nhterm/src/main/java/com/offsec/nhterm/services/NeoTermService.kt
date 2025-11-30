@@ -3,9 +3,8 @@ package com.offsec.nhterm.services
 import android.annotation.SuppressLint
 import android.app.*
 import android.app.PendingIntent.FLAG_IMMUTABLE
-import android.content.Context
 import android.content.Intent
-import android.icu.util.TimeUnit
+import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
@@ -13,28 +12,17 @@ import androidx.core.app.NotificationCompat
 import com.offsec.nhterm.R
 import com.offsec.nhterm.backend.EmulatorDebug
 import com.offsec.nhterm.backend.TerminalSession
-import com.offsec.nhterm.component.config.NeoTermPath
 import com.offsec.nhterm.component.session.ShellParameter
 import com.offsec.nhterm.component.session.XParameter
 import com.offsec.nhterm.component.session.XSession
-import com.offsec.nhterm.setup.SetupHelper
-import com.offsec.nhterm.ui.other.AboutActivity
 import com.offsec.nhterm.ui.term.NeoTermActivity
 import com.offsec.nhterm.utils.NLog
 import com.offsec.nhterm.utils.Terminals
-import com.offsec.nhterm.utils.extractAssetsDir
-import java.io.BufferedReader
-import java.io.File
-import java.io.InputStreamReader
-import java.lang.Process
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-
+import kotlin.text.compareTo
 
 /**
  * @author kiva
  */
-
 class NeoTermService : Service() {
   inner class NeoTermBinder : Binder() {
     var service = this@NeoTermService
@@ -50,10 +38,18 @@ class NeoTermService : Service() {
     super.onCreate()
 
     createNotificationChannel()
-    startForeground(NOTIFICATION_ID, createNotification())
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      startForeground(
+        NOTIFICATION_ID,
+        createNotification(),
+        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+      )
+    } else {
+      startForeground(NOTIFICATION_ID, createNotification())
+    }
   }
 
-  override fun onBind(intent: Intent): IBinder? {
+  override fun onBind(intent: Intent): IBinder {
     return serviceBinder
   }
 
@@ -71,11 +67,16 @@ class NeoTermService : Service() {
       ACTION_RELEASE_LOCK -> releaseLock()
     }
 
-    return Service.START_NOT_STICKY
+    return START_NOT_STICKY
   }
 
   override fun onDestroy() {
-    stopForeground(true)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      stopForeground(STOP_FOREGROUND_REMOVE)
+    } else {
+      @Suppress("DEPRECATION")
+      stopForeground(true)
+    }
 
     for (i in mTerminalSessions.indices)
       mTerminalSessions[i].finishIfRunning()
@@ -140,7 +141,12 @@ class NeoTermService : Service() {
   }
 
   private fun updateNotification() {
-    val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        return
+      }
+    }
+    val service = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     service.notify(NOTIFICATION_ID, createNotification())
   }
 
@@ -150,7 +156,6 @@ class NeoTermService : Service() {
     val pendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, FLAG_IMMUTABLE)
 
     val sessionCount = mTerminalSessions.size
-    val xSessionCount = mXSessions.size
     var contentText = getString(R.string.service_status_text, sessionCount)
 
     val lockAcquired = mWakeLock != null
@@ -165,7 +170,7 @@ class NeoTermService : Service() {
     builder.setShowWhen(false)
     builder.color = 0xFF000000.toInt()
 
-    builder.priority = if (lockAcquired) Notification.PRIORITY_HIGH else Notification.PRIORITY_LOW
+    builder.priority = if (lockAcquired) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_LOW
 
     val exitIntent = Intent(this, NeoTermService::class.java).setAction(ACTION_SERVICE_STOP)
     builder.addAction(
@@ -193,23 +198,25 @@ class NeoTermService : Service() {
 
     val channel = NotificationChannel(DEFAULT_CHANNEL_ID, "NetHunter", NotificationManager.IMPORTANCE_LOW)
     channel.description = "NetHunter notifications"
-    val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     manager.createNotificationChannel(channel)
   }
 
   @SuppressLint("WakelockTimeout")
   private fun acquireLock() {
     if (mWakeLock == null) {
-      val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+      val pm = getSystemService(POWER_SERVICE) as PowerManager
       mWakeLock = pm.newWakeLock(
         PowerManager.PARTIAL_WAKE_LOCK,
         EmulatorDebug.LOG_TAG + ":"
       )
       mWakeLock!!.acquire()
 
-      val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+      val wm = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+
+      @Suppress("DEPRECATION")
       mWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, EmulatorDebug.LOG_TAG)
-      mWifiLock!!.acquire()
+      mWifiLock?.acquire()
 
       updateNotification()
     }
@@ -219,7 +226,6 @@ class NeoTermService : Service() {
     if (mWakeLock != null) {
       mWakeLock!!.release()
       mWakeLock = null
-
       mWifiLock!!.release()
       mWifiLock = null
 
@@ -228,11 +234,10 @@ class NeoTermService : Service() {
   }
 
   companion object {
-    val ACTION_SERVICE_STOP = "neoterm.action.service.stop"
-    val ACTION_ACQUIRE_LOCK = "neoterm.action.service.lock.acquire"
-    val ACTION_RELEASE_LOCK = "neoterm.action.service.lock.release"
-    private val NOTIFICATION_ID = 52019
-
-    val DEFAULT_CHANNEL_ID = "neoterm_notification_channel"
+    const val ACTION_SERVICE_STOP = "neoterm.action.service.stop"
+    const val ACTION_ACQUIRE_LOCK = "neoterm.action.service.lock.acquire"
+    const val ACTION_RELEASE_LOCK = "neoterm.action.service.lock.release"
+    private const val NOTIFICATION_ID = 52019
+    const val DEFAULT_CHANNEL_ID = "neoterm_notification_channel"
   }
 }
