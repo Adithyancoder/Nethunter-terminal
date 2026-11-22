@@ -54,6 +54,10 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   var addSessionListener = createAddSessionListener()
   private var termService: NeoTermService? = null
 
+  private val iswatch: Boolean by lazy {
+    packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -832,7 +836,8 @@ class NeoTermActivity : AppCompatActivity(), ServiceConnection, SharedPreference
   fun onToggleImeEvent(toggleImeEvent: ToggleImeEvent) {
     if (!tabSwitcher.isSwitcherShown) {
       val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-      imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+      if (iswatch) imm.showSoftInput(currentFocus, InputMethodManager.SHOW_FORCED);
+      else imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
     }
   }
 

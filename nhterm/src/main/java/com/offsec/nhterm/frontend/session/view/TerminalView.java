@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -22,6 +23,7 @@ import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Scroller;
 import android.widget.Toast;
 
@@ -72,6 +74,8 @@ public final class TerminalView extends View {
   private ActionMode mActionMode;
   private BitmapDrawable mLeftSelectionHandle, mRightSelectionHandle;
   private static Toast toast;
+
+  private final boolean iswatch = getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
 
   float mScaleFactor = 1.f;
   /* final */ GestureAndScaleRecognizer mGestureRecognizer;
@@ -344,6 +348,8 @@ public final class TerminalView extends View {
     if (mEnableWordBasedIme) {
       // Workaround for Google Pinning cannot input Chinese
       outAttrs.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+    } else if (iswatch) {
+      outAttrs.inputType = InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
     } else {
       outAttrs.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL | InputType.TYPE_NULL;
     }
@@ -390,6 +396,37 @@ public final class TerminalView extends View {
         KeyEvent deleteKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL);
         for (int i = 0; i < leftLength; i++) sendKeyEvent(deleteKey);
         return super.deleteSurroundingText(leftLength, rightLength);
+      }
+
+      // WearOS keyboard support
+      @Override
+      public boolean performEditorAction(int actionCode) {
+        if (actionCode == EditorInfo.IME_ACTION_SEND || actionCode == EditorInfo.IME_ACTION_DONE) {
+          sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
+          sendKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
+          InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+          if (imm != null) {
+            imm.hideSoftInputFromWindow(getWindowToken(), 0);
+          }
+          return true;
+        }
+        return super.performEditorAction(actionCode);
+      }
+
+      @Override
+      public boolean sendKeyEvent(KeyEvent event) {
+        boolean handled = TerminalView.this.dispatchKeyEvent(event);
+        if (iswatch
+          && event.getKeyCode() == KeyEvent.KEYCODE_ENTER
+          && event.getAction() == KeyEvent.ACTION_UP) {
+          post(() -> {
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+              imm.hideSoftInputFromWindow(getWindowToken(), 0);
+            }
+          });
+        }
+        return handled;
       }
 
       void sendTextToTerminal(CharSequence text) {

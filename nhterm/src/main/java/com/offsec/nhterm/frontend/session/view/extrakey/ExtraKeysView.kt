@@ -1,10 +1,9 @@
 package com.offsec.nhterm.frontend.session.view.extrakey
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.AttributeSet
 import android.view.*
 import android.widget.GridLayout
@@ -31,6 +30,7 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
     private val ARROW_LEFT = ArrowButton(IExtraButton.KEY_ARROW_LEFT)
     private val ARROW_RIGHT = ArrowButton(IExtraButton.KEY_ARROW_RIGHT)
     private val SLASH = ControlButton(IExtraButton.KEY_SLASH)
+    private val ENTER = ControlButton(IExtraButton.KEY_ENTER)
     private val TOGGLE_IME = object : ControlButton(KEY_TOGGLE_IME) {
       override fun onClick(view: View) {
         EventBus.getDefault().post(ToggleImeEvent())
@@ -66,13 +66,14 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
   private val extraKeyComponent: ExtraKeyComponent
 
+  private val iswatch: Boolean = context.packageManager.hasSystemFeature(PackageManager.FEATURE_WATCH)
+
   init {
     alpha = DEFAULT_ALPHA
     gravity = Gravity.TOP
     orientation = VERTICAL
     typeface = Typeface.createFromAsset(context.assets, "eks_font.ttf")
     extraKeyComponent = ComponentManager.getComponent<ExtraKeyComponent>()
-
     initBuiltinKeys()
     loadDefaultUserKeys()
     updateButtons()
@@ -229,21 +230,39 @@ class ExtraKeysView(context: Context, attrs: AttributeSet) : LinearLayout(contex
 
   private fun initBuiltinKeys() {
     // Second Row
-    addBuiltinKey(CTRL)
-    addBuiltinKey(TAB)
-    addBuiltinKey(PAGE_DOWN)
-    addBuiltinKey(ARROW_LEFT)
-    addBuiltinKey(ARROW_DOWN)
-    addBuiltinKey(ARROW_RIGHT)
-    addBuiltinKey(TOGGLE_IME)
+    if (iswatch) {
+      addBuiltinKey(PAGE_DOWN)
+      addBuiltinKey(HOME)
+      addBuiltinKey(ARROW_LEFT)
+      addBuiltinKey(ARROW_DOWN)
+      addBuiltinKey(ARROW_RIGHT)
+      addBuiltinKey(TAB)
+      addBuiltinKey(ALT)
+    } else {
+      addBuiltinKey(CTRL)
+      addBuiltinKey(TAB)
+      addBuiltinKey(ARROW_LEFT)
+      addBuiltinKey(ARROW_DOWN)
+      addBuiltinKey(ARROW_RIGHT)
+      addBuiltinKey(TOGGLE_IME)
+    }
 
     // First Row
-    addBuiltinKey(ESC)
-    addBuiltinKey(ALT)
-    addBuiltinKey(PAGE_UP)
-    addBuiltinKey(HOME)
-    addBuiltinKey(ARROW_UP)
-    addBuiltinKey(END)
+    if (iswatch) {
+      addBuiltinKey(PAGE_UP)
+      addBuiltinKey(CTRL)
+      addBuiltinKey(ENTER)
+      addBuiltinKey(ARROW_UP)
+      addBuiltinKey(TOGGLE_IME)
+      //addBuiltinKey(ESC)
+    } else {
+      addBuiltinKey(ESC)
+      addBuiltinKey(ALT)
+      addBuiltinKey(PAGE_UP)
+      addBuiltinKey(HOME)
+      addBuiltinKey(ARROW_UP)
+      addBuiltinKey(END)
+    }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       addBuiltinKey(EXPAND_BUTTONS)
