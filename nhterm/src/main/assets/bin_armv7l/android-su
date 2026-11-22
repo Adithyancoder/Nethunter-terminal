@@ -1,4 +1,4 @@
-#!/data/data/com.offsec.nhterm/files/usr/bin_armv7l/bash
+#!/data/data/com.offsec.nhterm/files/usr/bin/bash
 # Version: 1.0.8-magisk-kimo-these-nuts
 
 # Log file path (external storage)
@@ -21,7 +21,7 @@ log_debug() {
 }
 
 # export path for android bins/tools
-export PATH="/data/data/com.offsec.nethunter/files/scripts:/data/data/com.offsec.nethunter/files/scripts/bin:/data/data/com.offsec.nhterm/files/home/.nhterm/script:/data/data/com.offsec.nhterm/files/usr/bin_armv7l:/data/data/com.offsec.nhterm/files/usr/sbin:/sbin:/system/bin:/system/xbin:/system_ext/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/odm/bin:/vendor/bin:/product/bin:."
+export PATH="/data/data/com.offsec.nethunter/files/scripts:/data/data/com.offsec.nethunter/files/scripts/bin:/data/data/com.offsec.nhterm/files/home/.nhterm/script:/data/data/com.offsec.nhterm/files/usr/bin:/data/data/com.offsec.nhterm/files/usr/sbin:/sbin:/system/bin:/system/xbin:/system_ext/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/odm/bin:/vendor/bin:/product/bin:."
 # Remove some exports that break default android binaries from running
 unset LD_LIBRARY_PATH
 unset LD_PRELOAD
@@ -127,6 +127,6 @@ log_debug "Final SU2 command: ${SU2[*]}"
 ##
 
 clear
-log_debug "Executing: ${SU2[*]} /data/data/com.offsec.nhterm/files/usr/bin_armv7l/bash"
+log_debug "Executing: ${SU2[*]} /data/data/com.offsec.nhterm/files/usr/bin/bash"
 
-${SU2[@]} /data/data/com.offsec.nhterm/files/usr/bin_armv7l/bash
+${SU2[@]} /data/data/com.offsec.nhterm/files/usr/bin/bash

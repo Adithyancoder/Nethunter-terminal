@@ -34,7 +34,7 @@ object NethunterComponent {
       Log.d("NETHUNTER_INIT", "Extracting $sysarch binaries")
       Executer("/system/bin/rm -rf " + NeoTermPath.BIN_PATH + "_$sysarch")
       context.extractAssetsDir("bin_aarch64", NeoTermPath.BIN_PATH + "_$sysarch")
-    } else if (sysarch == "armv7l") {
+    } else if (sysarch == "armv7l" || sysarch == "armv8l") {
       Log.d("NETHUNTER_INIT", "Extracting $sysarch binaries")
       Executer("/system/bin/rm -rf " + NeoTermPath.BIN_PATH + "_$sysarch")
       context.extractAssetsDir("bin_armv7l", NeoTermPath.BIN_PATH + "_$sysarch")
